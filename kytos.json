@@ -1,0 +1,11 @@
+{
+  "author": "amlight",
+  "username": "amlight",
+  "name": "sdntrace",
+  "description": "An OpenFlow Path Tracing",
+  "version": "0.1",
+  "napp_dependencies": ["amlight/coloring"],
+  "license": "GPL3.0",
+  "tags": ["experimental", "coloring"],
+  "url": "http://github.com/amlight/kytos/"
+}
