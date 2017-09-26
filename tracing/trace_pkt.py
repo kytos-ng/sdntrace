@@ -4,10 +4,10 @@
 """
 
 import dill
-from pyof.foundation.network_types import Ethernet, IPv4
+from pyof.foundation.network_types import Ethernet, IPv4, VLAN
 from napps.amlight.sdntrace import settings, constants
 from napps.amlight.sdntrace.tracing.trace_msg import TraceMsg
-from napps.amlight.sdntrace.shared.extd_nw_types import VLAN, TCP, UDP
+from napps.amlight.sdntrace.shared.extd_nw_types import TCP, UDP
 from napps.amlight.sdntrace.shared.switches import Switches
 from napps.amlight.sdntrace.shared.colors import Colors
 
@@ -77,11 +77,12 @@ def generate_trace_pkt(entries, color, r_id, my_domain):
     tp_src, tp_dst = prepare_tp(tp, tp_src, tp_dst)
 
     kethernet = Ethernet()
-    kethernet.ether_type = constants.VLAN
+    kethernet.ether_type = int(dl_type)
     kethernet.source = dl_src
     kethernet.destination = dl_dst
 
-    kvlan = VLAN(vid=int(dl_vlan), pcp=dl_vlan_pcp, ether_type=int(dl_type))
+    kvlan = VLAN(vid=int(dl_vlan), pcp=dl_vlan_pcp)
+    kethernet.vlan = kvlan
 
     msg = TraceMsg(r_id, my_domain)
 
@@ -92,11 +93,10 @@ def generate_trace_pkt(entries, color, r_id, my_domain):
         kip.source = nw_src
         # ip.protocol = 6
         kip.data = dill.dumps(msg)
-        kvlan.data = kip.pack()
+        kethernet.data = kip.pack()
     else:
-        kvlan.data = dill.dumps(msg)
+        kethernet.data = dill.dumps(msg)
 
-    kethernet.data = kvlan.pack()
     pkt = kethernet.pack()
     return in_port, pkt
 
@@ -149,13 +149,6 @@ def process_packet(ethernet):
 
         trace_msg = ethernet.data.value
 
-        if etype == constants.VLAN:
-            vlan = VLAN()
-            vlan.unpack(ethernet.data.value)
-            etype = vlan.ether_type
-            offset += constants.VLAN_LEN
-            trace_msg = extract_trace_msg(vlan.data)
-
         if etype == constants.IPv4:
             ip = IPv4()
             ip.unpack(ethernet.data.value, offset)
@@ -196,10 +189,7 @@ def get_vlan_from_pkt(data):
     ethernet = Ethernet()
     ethernet.unpack(data)
 
-    vlan = VLAN()
-    vlan.unpack(ethernet.data.value)
-
-    return vlan.vid
+    return ethernet.vlan.vid
 
 
 def prepare_switch(switch, dpid, in_port):
