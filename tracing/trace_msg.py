@@ -1,6 +1,8 @@
+""" This module creates the TraceID message to be used as the
+Ethernet payload of the PacketOut. This msg is important to
+differentiate parallel traces and for inter-domain tracing.
 """
 
-"""
 import logging
 import ast
 from datetime import datetime
@@ -33,7 +35,8 @@ class TraceMsg(object):
 
     NOT_PROVIDED = 0
 
-    def __init__(self, r_id='0', r_domain='local', r_type='intra', r_time=0, r_path=0):
+    def __init__(self, r_id='0', r_domain='local', r_type='intra',
+                 r_time=0, r_path=0):
         self.log = logging
 
         self._request_id = None
@@ -45,6 +48,16 @@ class TraceMsg(object):
         self._instantiate_vars(r_id, r_domain, r_type, r_time, r_path)
 
     def _instantiate_vars(self, r_id, r_domain, r_type, r_time, r_path):
+        """ Attributes in the TraceMsg are processed as
+        Getter and Setters.
+
+        Args:
+            r_id: request ID
+            r_domain: request domain
+            r_type: request type (inter|intra)
+            r_time: request time
+            r_path: concatenation of paths
+        """
         self.request_id = r_id
         self.local_domain = r_domain
         self.type = r_type
@@ -53,14 +66,17 @@ class TraceMsg(object):
 
     @property
     def id(self):
+        """ Getter: Request ID"""
         return self.request_id
 
     @property
     def request_id(self):
+        """ Getter: Request ID"""
         return self._request_id
 
     @request_id.setter
     def request_id(self, r_id):
+        """ Setter: Request ID"""
         try:
             if isinstance(r_id, int):
                 self._request_id = r_id
@@ -71,10 +87,12 @@ class TraceMsg(object):
 
     @property
     def local_domain(self):
+        """ Getter: Request Domain"""
         return self._local_domain
 
     @local_domain.setter
     def local_domain(self, r_domain):
+        """ Setter: Request Domain"""
         try:
             if len(r_domain) > 0:
                 self._local_domain = r_domain
@@ -83,10 +101,12 @@ class TraceMsg(object):
 
     @property
     def type(self):
+        """ Getter: Request Type"""
         return self._type
 
     @type.setter
     def type(self, r_type):
+        """ Setter: Request Type"""
         try:
             if isinstance(r_type, str) and r_type in ['intra', 'inter']:
                 self._type = r_type
@@ -97,9 +117,11 @@ class TraceMsg(object):
 
     @property
     def timestamp(self):
+        """ Getter: Request Timestamp"""
         return self._timestamp
 
     def get_timestamp(self, label=None):
+        """ Request Timestamp in different formats"""
         if not label:
             return self.timestamp
         elif label == 'str':
@@ -109,6 +131,7 @@ class TraceMsg(object):
 
     @timestamp.setter
     def timestamp(self, r_timestamp=None):
+        """ Setter: Request Timestamp"""
         try:
             if r_timestamp is not self.NOT_PROVIDED:
                 if isinstance(r_timestamp, str):
@@ -124,16 +147,19 @@ class TraceMsg(object):
 
     @property
     def inter_path(self):
+        """ Getter: Request Paths in the way"""
         return self._inter_path
 
     @inter_path.setter
     def inter_path(self, r_inter_path):
-        """
-            Set the self.inter_path variable
-            if a list or a dict is provided, append to the end of the current list
-            if nothing is provided, delete the current value
-            Args:
-                r_inter_path: a list or a dict of paths
+        """ Setter: Request Paths in the way
+
+        Set the self.inter_path variable
+        if a list or a dict is provided, append to the end of the current
+        list
+        if nothing is provided, delete the current value
+        Args:
+            r_inter_path: a list or a dict of paths
         """
         try:
             if self.type == 'intra':
@@ -153,16 +179,16 @@ class TraceMsg(object):
             elif r_inter_path is 0 or isinstance(r_inter_path, list):
                 self._inter_path = []
             else:
-                self.log.warn('Error: inter_trace else')
+                self.log.warning('Error: inter_trace else')
                 raise ValueError
         except ValueError:
             raise ValueError("Invalid Path provided: %s" % r_inter_path)
 
     def import_data(self, entries):
-        """
-            Import data from a dictionary with format similar to self.data
-            Args:
-                entries: dictionary of exported data from self.data
+        """ Import data from a dictionary with format similar to self.data
+
+        Args:
+            entries: dictionary of exported data from self.data
         """
         if isinstance(entries, str):
             entries = ast.literal_eval(entries)
@@ -175,11 +201,13 @@ class TraceMsg(object):
         self._instantiate_vars(r_id, r_domain, r_type, r_time, r_path)
 
     def is_intra(self):
+        """ Check if it is intra or inter domain"""
         if self.type == 'intra':
             return True
         return False
 
     def data(self):
+        """ Create msg to be appended"""
         result = dict()
         result['request_id'] = self.request_id
         result['local_domain'] = self.local_domain
@@ -192,18 +220,21 @@ class TraceMsg(object):
         return result
 
     def __str__(self):
+        """ Print data as a string for debugging """
         return str(self.data())
 
     def get_last_id(self):
+        """ Get the last request ID"""
         domain_name = self.inter_path[-1].keys()[0]
         return self.inter_path[-1][domain_name]['request_id']
 
     def set_interdomain(self):
-        """
-            A probe trace will be sent. Prepare payload
-        """
-        self.inter_path = {self.local_domain: {'request_id': self.request_id,
-                                               'timestamp': self.get_timestamp(label='str')}}
+        """ A probe trace will be sent. Prepare payload """
+        self.inter_path = {
+            self.local_domain: {
+                'request_id': self.request_id,
+                'timestamp': self.get_timestamp(label='str')
+            }}
         self.type = 'inter'
 
 
@@ -221,21 +252,24 @@ class Path(object):
         self.instantiate_vars(domain)
 
     def instantiate_vars(self, domain):
+        """ Path's Setter and Getter"""
         self.path = domain
 
     @property
     def path(self):
+        """ Path Getter"""
         return self._path
 
     @path.setter
     def path(self, domain):
+        """ Path Setter"""
         if self.is_valid_domain(domain):
             keys = list(domain.keys())[0]
             values = list(domain.values())[0]
             domain[keys] = self.add_time(values)
             self._path = domain
         else:
-            self.log.warn('Path.setter not possible')
+            self.log.warning('Path.setter not possible')
             raise ValueError
 
     def is_valid_domain(self, domain):
@@ -257,7 +291,9 @@ class Path(object):
                     elif isinstance(list(domain.values())[0], dict):
                         return True
                 elif self.is_local_and_remote_equal(domain):
-                    self.log.warn('Error: local_domain and path can not be the same')
+                    self.log.warning(
+                        'Error: local_domain and path can not be the same'
+                    )
                     return False
                 else:
                     if isinstance(list(domain.values())[0], str):
@@ -267,6 +303,7 @@ class Path(object):
         return False
 
     def is_local_and_remote_equal(self, domain):
+        """ Compare if local domain is equal to remote"""
         if list(domain.keys())[0] is self.compare_domain:
             return True
         return False

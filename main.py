@@ -1,43 +1,52 @@
 """Main module of amlight/sdntrace Kytos Network Application.
 
-An OpenFlow Path Trace
+An OpenFlow Data Path Trace.
+
+The AmLight SDNTrace is a Kytos Network Application allows users to trace a
+path directly from the data plane. Originally written for Ryu
+(github.com/amlight/sdntrace).
+
+Steps:
+    1 - User requests a trace using a specific flow characteristic,
+        for example VLAN = 1000 and Dest TCP Port = 25
+    2 - REST module inserts trace request in a queue provided by the
+        TraceManager
+    3 - The TraceManager runs the Tracer, basically sending PacketOuts
+        and waiting for PacketIn until reaching a timeout
+    4 - After Timeout, result is provided back to REST that provides it
+        back to user
+Dependencies:
+    * - amlight/coloring Napp will color all switches
+
+At this moment, OpenFlow 1.0 and 1.3 are supported.
 """
 
-from kytos.core import KytosNApp, log
-from kytos.core.helpers import listen_to
-from pyof.foundation.network_types import Ethernet
 
+from flask import jsonify, request
+from kytos.core import KytosNApp, log, rest
+from kytos.core.helpers import listen_to
 from napps.amlight.sdntrace import settings
 from napps.amlight.sdntrace.shared.switches import Switches
 from napps.amlight.sdntrace.tracing.trace_manager import TraceManager
+from napps.amlight.sdntrace.backends.of_parser import process_packet_in
 
+
+VERSION = '0.2'
 
 
 class Main(KytosNApp):
     """Main class of amlight/sdntrace NApp.
 
-    This application allows users to trace a path directly from the data
-    plane. Originally written for Ryu (github.com/amlight/sdntrace), this app
-    is being ported to Kytos.
-    Steps:
-        1 - User requests a trace using a specific flow characteristic,
-            for example VLAN = 1000 Dest TCP Port = 25
-        2 - REST module inserts trace request in a queue provided by the
-            TraceManager
-        3 - The TraceManager runs the Tracer, basically sending PacketOuts
-            and waiting for PacketIn till reaching a timeout
-        4 - After Timeout, result is provided back to REST that provides it
-            back to user
-    Dependencies:
-        * - of_topology will discovery will the topology
-        * - sdntrace_coloring will color all switches
-
-    At this moment, only OpenFlow 1.0 is supported.
+    REST methods:
+        /sdntrace/trace ['PUT'] - request a trace
+        /sdntrace/trace ['GET'] - list of previous trace requests and results
+        /sdntrace/trace/<trace_id> - get the results of trace requested
+        /sdntrace/settings - list the settings
     """
 
     def setup(self):
         """ Default Kytos/Napps setup call. """
-        log.info("Starting Kytos SDNTrace App!")
+        log.info("Starting Kytos SDNTrace App version %s!" % VERSION)
 
         # Create list of switches
         self.switches = Switches(self.controller.switches)
@@ -45,53 +54,66 @@ class Main(KytosNApp):
         # Instantiate TraceManager
         self.tracing = TraceManager(self.controller)
 
-        # Register REST methods
-        self.register_rest()
-
-    def register_rest(self):
-        """Register REST calls to be used.
-        PUT /sdntrace/trace returns a trace_id and
-            it is used to request a trace
-        GET /sdntrace/trace/<trace_id> is used to collect
-            results using the trace_id provided
-        """
-        endpoints = [('/sdntrace/trace',
-                      self.tracing.rest_new_trace,
-                      ['PUT']),
-                     ('/sdntrace/trace/<trace_id>',
-                      self.tracing.rest_get_result,
-                      ['GET'])]
-        for endpoint in endpoints:
-            self.controller.register_rest_endpoint(*endpoint)
-
-    @listen_to('kytos/of_core.v0x01.messages.in.ofpt_packet_in')
+    @listen_to('kytos/of_core.v0x0[14].messages.in.ofpt_packet_in')
     def handle_packet_in(self, event):
-        """ Receives PacketIn msgs and search from trace packets.
+        """ Receives OpenFlow PacketIn msgs
+        and search from trace packets.
 
         Args:
             event (KycoPacketIn): Received Event
         """
-        log.debug("PacketIn Received")
-        packet_in = event.content['message']
-
-        in_port = packet_in.in_port.value
-        switch = event.source.switch
-
-        ethernet = Ethernet()
-        ethernet.unpack(packet_in.data.value)
-
-        if settings.COLOR_VALUE in ethernet.source.value:
+        ethernet, in_port, switch = process_packet_in(event)
+        if not isinstance(ethernet, int):
             self.tracing.process_probe_packet(event, ethernet,
                                               in_port, switch)
 
     def execute(self):
-        """
-
-        """
+        """ Kytos Napp execute method """
         pass
 
     def shutdown(self):
-        """
-
-        """
+        """ Kytos Napp shutdown method"""
         pass
+
+    @rest('/trace', methods=['PUT'])
+    def run_trace(self):
+        """ Submit a trace request
+
+        Return:
+            trace ID in JSON format
+        """
+        return jsonify(self.tracing.rest_new_trace(request.get_json()))
+
+    @rest('/trace', methods=['GET'])
+    def get_results(self):
+        """ List all traces performed so far.
+
+        Return:
+            rest_list_results in JSON format
+        """
+        return jsonify(self.tracing.rest_list_results())
+
+    @rest('/trace/<trace_id>', methods=['GET'])
+    def get_result(self, trace_id):
+        """ List All Traces performed since the Napp loaded
+
+        Return:
+            rest_get_result in JSON format
+        """
+        return jsonify(self.tracing.rest_get_result(trace_id))
+
+    @staticmethod
+    @rest('/settings', methods=['GET'])
+    def list_settings():
+        """ List the SDNTrace settings
+
+        Return:
+            SETTINGS in JSON format
+        """
+        settings_dict = dict()
+        settings_dict['color_field'] = settings.COLOR_FIELD
+        settings_dict['color_value'] = settings.COLOR_VALUE
+        settings_dict['my_domain'] = settings.MY_DOMAIN
+        settings_dict['trace_interval'] = settings.TRACE_INTERVAL
+        settings_dict['sdntrace_version'] = VERSION
+        return jsonify(settings_dict)

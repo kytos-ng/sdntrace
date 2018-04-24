@@ -3,6 +3,7 @@
      used by PacketOuts and PacketIns.
 """
 
+
 import dill
 from pyof.foundation.network_types import Ethernet, IPv4, VLAN
 from napps.amlight.sdntrace import settings, constants
@@ -17,7 +18,7 @@ def generate_trace_pkt(entries, color, r_id, my_domain):
     data needs to be serialized.
 
     Args:
-        entries:
+        entries: provided by user or collected from PacketIn
         color: result from Coloring Napp for a specific DPID
         r_id:
         my_domain:
@@ -42,7 +43,7 @@ def generate_trace_pkt(entries, color, r_id, my_domain):
     else:
         dl_src = '0e:55:05:0e:55:05'
     dl_dst = "ca:fe:ca:fe:ca:fe"
-    dl_vlan, dl_type, dl_vlan_pcp = 100, 2048, 0
+    dl_vlan, dl_type, dl_vlan_pcp = 100, constants.IPV4, 0
     nw_src, nw_dst, nw_tos = '127.0.0.1', '127.0.0.1', 0
     tp_src, tp_dst = 1, 1
 
@@ -67,37 +68,41 @@ def generate_trace_pkt(entries, color, r_id, my_domain):
         dpid, in_port = prepare_switch(switch, dpid, in_port)
 
     if len(eth) > 0:
-        dl_src, dl_dst, dl_vlan, dl_type, dl_vlan_pcp = prepare_ethernet(eth, dl_src, dl_dst,
-                                                                         dl_vlan, dl_type,
-                                                                         dl_vlan_pcp)
+        dl_src, dl_dst, dl_vlan, dl_type, dl_vlan_pcp = prepare_ethernet(
+            eth,
+            dl_src,
+            dl_dst,
+            dl_vlan,
+            dl_type,
+            dl_vlan_pcp
+        )
     # if len(ip) > 0:
     nw_src, nw_dst, nw_tos = prepare_ip(ip, nw_src, nw_dst, nw_tos)
 
     # if len(tp) > 0:
     tp_src, tp_dst = prepare_tp(tp, tp_src, tp_dst)
 
-    kethernet = Ethernet()
-    kethernet.ether_type = int(dl_type)
-    kethernet.source = dl_src
-    kethernet.destination = dl_dst
+    ethernet = Ethernet()
+    ethernet.ether_type = int(dl_type)
+    ethernet.source = dl_src
+    ethernet.destination = dl_dst
 
-    kvlan = VLAN(vid=int(dl_vlan), pcp=dl_vlan_pcp)
-    kethernet.vlan = kvlan
+    vlan = VLAN(vid=int(dl_vlan), pcp=dl_vlan_pcp)
+    ethernet.vlans.append(vlan)
 
     msg = TraceMsg(r_id, my_domain)
 
-    if int(dl_type) == constants.IPv4:
-
-        kip = IPv4()
-        kip.destination = nw_dst
-        kip.source = nw_src
+    if int(dl_type) == constants.IPV4:
+        ip = IPv4()
+        ip.destination = nw_dst
+        ip.source = nw_src
         # ip.protocol = 6
-        kip.data = dill.dumps(msg)
-        kethernet.data = kip.pack()
+        ip.data = dill.dumps(msg)
+        ethernet.data = ip.pack()
     else:
-        kethernet.data = dill.dumps(msg)
+        ethernet.data = dill.dumps(msg)
 
-    pkt = kethernet.pack()
+    pkt = ethernet.pack()
     return in_port, pkt
 
 
@@ -124,50 +129,50 @@ def prepare_next_packet(entries, result, ev):
         in_port = ev.content['message'].in_port.value
         entries['trace']['switch']['in_port'] = in_port
     else:
-        # TODO: fix it
-        in_port = ev.content['message'].match['in_port']
+        in_port = ev.message.in_port
         entries['trace']['switch']['in_port'] = in_port
 
-    entries['trace']['eth']['dl_vlan'] = get_vlan_from_pkt(ev.content['message'].data.value)
+    entries['trace']['eth']['dl_vlan'] = get_vlan_from_pkt(
+        ev.content['message'].data.value)
 
     return entries, color, switch
 
 
 def process_packet(ethernet):
-        """Navigates through the Ethernet payload looking for the
-        TraceMsg(). TraceMsg is the payload after all protocols of
-        the TCP/IP stack.
+    """Navigates through the Ethernet payload looking for the
+    TraceMsg(). TraceMsg is the payload after all protocols of
+    the TCP/IP stack.
 
-        Args:
-            ethernet: ethernet frame
+    Args:
+        ethernet: ethernet frame
 
-        Returns:
-            TraceMsg in the binary format
-        """
-        etype = ethernet.ether_type
-        offset = 0
+    Returns:
+        TraceMsg in the binary format
+    """
+    etype = ethernet.ether_type
+    offset = 0
 
-        trace_msg = ethernet.data.value
+    trace_msg = ethernet.data.value
 
-        if etype == constants.IPv4:
-            ip = IPv4()
-            ip.unpack(ethernet.data.value, offset)
-            offset += ip.length
-            trace_msg = extract_trace_msg(ip.data)
+    if etype == constants.IPV4:
+        ip = IPv4()
+        ip.unpack(ethernet.data.value, offset)
+        offset += ip.length
+        trace_msg = extract_trace_msg(ip.data)
 
-            if ip.protocol == constants.TCP:
-                transport = TCP()
-                transport.parse(ethernet.data.value, offset)
-                offset += transport.length
-                trace_msg = extract_trace_msg(transport.data)
+        if ip.protocol == constants.TCP:
+            transport = TCP()
+            transport.parse(ethernet.data.value, offset)
+            offset += transport.length
+            trace_msg = extract_trace_msg(transport.data)
 
-            if ip.protocol == constants.UDP:
-                transport = UDP()
-                transport.parse(ethernet.data.value, offset)
-                offset += transport.length
-                trace_msg = extract_trace_msg(transport.data)
+        if ip.protocol == constants.UDP:
+            transport = UDP()
+            transport.parse(ethernet.data.value, offset)
+            offset += transport.length
+            trace_msg = extract_trace_msg(transport.data)
 
-        return trace_msg
+    return trace_msg
 
 
 def extract_trace_msg(data):
@@ -185,11 +190,10 @@ def get_node_color_from_dpid(dpid):
 
 
 def get_vlan_from_pkt(data):
-
     ethernet = Ethernet()
     ethernet.unpack(data)
-
-    return ethernet.vlan.vid
+    vlan = ethernet.vlans[0]
+    return vlan.vid
 
 
 def prepare_switch(switch, dpid, in_port):

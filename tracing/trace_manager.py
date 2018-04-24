@@ -1,14 +1,14 @@
 """
     Trace Manager Class
 """
-import dill
+
+
 import time
-import json
-from flask import request
+import dill
 from _thread import start_new_thread as new_thread
 
 from kytos.core import log
-from napps.amlight.sdntrace import settings, constants
+from napps.amlight.sdntrace import settings
 from napps.amlight.sdntrace.shared.switches import Switches
 from napps.amlight.sdntrace.shared.colors import Colors
 from napps.amlight.sdntrace.tracing.tracer import TracePath
@@ -41,14 +41,14 @@ class TraceManager(object):
         self._results_queue = dict()
 
         # PacketIn queue
-        self.trace_pktIn = []
+        self.trace_pkt_in = []
 
         # Thread to start traces
         new_thread(self._run_traces, (settings.TRACE_INTERVAL,))
 
     def _run_traces(self, trace_interval):
         """ Kytos Thread that will keep reading the
-        self.request_queue queue looking for new traces to start.
+        self.request_queue queue looking for new trace requests to run.
 
         Args:
             trace_interval = sleeping time
@@ -56,17 +56,17 @@ class TraceManager(object):
         while True:
             if self.number_pending_requests() > 0:
                 try:
-                    r_ids = []
-                    for r_id in self._request_queue:
-                        entries = self._request_queue[r_id]
-                        new_thread(self._spawn_trace, (r_id, entries,))
-                        r_ids.append(r_id)
+                    request_ids = []
+                    for req_id in self._request_queue:
+                        entries = self._request_queue[req_id]
+                        new_thread(self._spawn_trace, (req_id, entries,))
+                        request_ids.append(req_id)
                     # After starting traces for new requests,
                     # remove them from self._request_queue
-                    for rid in r_ids:
+                    for rid in request_ids:
                         del self._request_queue[rid]
-                except Exception as e:
-                    log.error("Trace Error: %s" % e)
+                except Exception as error:
+                    log.error("Trace Error: %s" % error)
             time.sleep(trace_interval)
 
     def _spawn_trace(self, trace_id, entries):
@@ -75,6 +75,7 @@ class TraceManager(object):
 
         Args:
             trace_id: trace request id
+            entries: user entries request
         """
         log.info("Creating thread to trace request id %s..." % trace_id)
         tracer = TracePath(self, trace_id, entries)
@@ -182,7 +183,7 @@ class TraceManager(object):
             return 0
 
         if self.verify_active_new_request(entries):
-            log.warn('Ignoring Duplicated Trace Request Received')
+            log.warning('Ignoring Duplicated Trace Request Received')
             return 0
 
         trace_id = self.get_id()
@@ -200,7 +201,7 @@ class TraceManager(object):
         """
         return len(self._request_queue)
 
-    def process_probe_packet(self, ev, ethernet, in_port, switch):
+    def process_probe_packet(self, event, ethernet, in_port, switch):
         """Used by sdntrace.packet_in_handler
 
         Args:
@@ -213,14 +214,15 @@ class TraceManager(object):
             or
             tuple (pktIn_dpid, pktIn_port, pkt[4], pkt, event)
         """
-        pktIn_dpid = switch.dpid
-        pktIn_port = in_port
+        pkt_in_dpid = switch.dpid
+        pkt_in_port = in_port
 
         msg = dill.loads(process_packet(ethernet))
         if msg.is_intra() and msg.local_domain == self._my_domain:
             # This queue stores all PacketIn message received
-            self.trace_pktIn.append((pktIn_dpid, pktIn_port, msg,
-                                     ethernet, ev))
+            pkt_in = {"dpid": pkt_in_dpid, "in_port": pkt_in_port,
+                      "msg": msg, "ethernet": ethernet, "event": event}
+            self.trace_pkt_in.append(pkt_in)
 
     def verify_active_new_request(self, entries):
         """Verify if any of the active queries has the
@@ -237,20 +239,22 @@ class TraceManager(object):
 
     # REST calls
 
-    def rest_new_trace(self):
+    def rest_new_trace(self, entries):
         """Used for the REST PUT call
 
+        Args:
+            entries: user provided parameters to trace
         Returns:
             Trace_ID in JSON format
         """
         result = dict()
-        entries = request.get_json()
         t_id = self.new_trace(entries)
         if t_id is not 0:
             result['result'] = {'trace_id': t_id}
         else:
-            result['result'] = {'Error': 'Invalid Switch'}
-        return json.dumps(result)
+            result['result'] = {'Error': 'Invalid Switch',
+                                'Entries': entries}
+        return result
 
     def rest_get_result(self, trace_id):
         """Usedf for the REST GET call
@@ -258,4 +262,12 @@ class TraceManager(object):
         Returns:
             get_result in JSON format
         """
-        return json.dumps(self.get_result(trace_id))
+        return self.get_result(trace_id)
+
+    def rest_list_results(self):
+        """Usedf for the REST GET call
+
+        Returns:
+            get_results in JSON format
+        """
+        return self.get_results()

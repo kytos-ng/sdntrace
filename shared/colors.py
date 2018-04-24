@@ -3,17 +3,22 @@
 """
 
 
-import requests
 import json
+import requests
 from kytos.core import log
+from napps.amlight.sdntrace import settings
 
 
 class Colors(object):
+    """ Class to handle the gathering of colors from
+    amlight/coloring Napp
+
+    """
 
     def __init__(self):
         """ Instantiate Colors and get list of colors
         """
-        self._url = 'http://localhost:8181/kytos/coloring/colors'
+        self._url = settings.COLORS_URL
         self._colors = dict()
         self._get_colors()
 
@@ -27,8 +32,8 @@ class Colors(object):
                 self._colors = result['colors']
             else:
                 raise Exception
-        except:
-            log.error('Error: Can not connect to Kytos/Coloring')
+        except Exception as err:
+            log.error('Error: Can not connect to Kytos/Coloring: %s' % err)
 
     def get_switch_color(self, dpid):
         """ Get the color_field and color_value of a specific
@@ -45,7 +50,6 @@ class Colors(object):
         """
         self._get_colors()
         try:
-            # TODO: remove self._temp_fix_color
             return self._colors[dpid]
         except KeyError:
             return {}

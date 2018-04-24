@@ -1,3 +1,7 @@
+"""
+ sdntrace settings
+"""
+
 
 # Field used to define color
 COLOR_FIELD = 'dl_src'
@@ -11,3 +15,9 @@ TRACE_INTERVAL = 1
 
 # OpenFlow PacketOut Action OFPP_TABLE for OF1.0
 OFPP_TABLE = 65529
+
+# OpenFlow PacketOut Action OFPP_TABLE for OF1.3
+OFPP_TABLE_13 = 4294967289
+
+# URL for coloring app
+COLORS_URL = 'http://localhost:8181/api/amlight/coloring/colors'
