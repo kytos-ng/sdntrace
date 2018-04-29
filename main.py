@@ -102,6 +102,15 @@ class Main(KytosNApp):
         """
         return jsonify(self.tracing.rest_get_result(trace_id))
 
+    @rest('/stats', methods=['GET'])
+    def get_stats(self):
+        """ Get statistics
+
+        Return:
+            rest_list_stats in JSON format
+        """
+        return jsonify(self.tracing.rest_list_stats())
+
     @staticmethod
     @rest('/settings', methods=['GET'])
     def list_settings():
@@ -115,5 +124,6 @@ class Main(KytosNApp):
         settings_dict['color_value'] = settings.COLOR_VALUE
         settings_dict['my_domain'] = settings.MY_DOMAIN
         settings_dict['trace_interval'] = settings.TRACE_INTERVAL
+        settings_dict['parallel_traces'] = settings.PARALLEL_TRACES
         settings_dict['sdntrace_version'] = VERSION
         return jsonify(settings_dict)
