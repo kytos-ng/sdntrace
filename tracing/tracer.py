@@ -69,7 +69,7 @@ class TracePath(object):
             3 - If result is a trace step, send PacketOut to the switch that
                 originated the PacketIn. Repeat till reaching timeout
         """
-        log.warning("Starting Trace Path for ID %s" % self.id)
+        log.warning("Starting Trace Path ID: %s" % self.id)
 
         entries = copy.deepcopy(self.init_entries)
         color = Colors().get_switch_color(self.init_switch.dpid)
@@ -104,7 +104,7 @@ class TracePath(object):
                                                       probe_pkt)
             if result == 'timeout':
                 self.rest.add_trace_step(self.trace_result, trace_type='last')
-                log.warning("Intra-Domain Trace Completed!")
+                log.warning("Trace %s: Intra-Domain Trace Completed!" % self.id)
                 self.trace_ended = True
             else:
                 self.rest.add_trace_step(self.trace_result,
@@ -138,8 +138,8 @@ class TracePath(object):
 
         while True:
 
-            log.warning('Tracer: Sending POut to switch: %s and in_port %s '
-                        % (switch.dpid, in_port))
+            log.warning('Trace %s: Sending POut to switch: %s and in_port %s '
+                        % (self.id, switch.dpid, in_port))
             send_packet_out(self.trace_mgr.controller, switch, in_port, probe_pkt)
 
             time.sleep(0.5)  # Wait 0.5 second before querying for PacketIns
@@ -164,7 +164,7 @@ class TracePath(object):
                               "port": pkt_in_msg["in_port"]}
                     return result, pkt_in_msg["event"]
                 else:
-                    log.warning('Sending PacketOut Again')
+                    log.warning('Trace %s: Sending PacketOut Again' % self.id)
                     send_packet_out(self.trace_mgr.controller,
                                     switch, in_port, probe_pkt)
 
@@ -187,7 +187,7 @@ class TracePath(object):
         for result in self.trace_result[:-1]:
             if result['dpid'] == last['dpid']:
                 if result['port'] == last['port']:
-                    log.warning('Tracer: Loop Dectected on %s port %s!!' %
-                                (last['dpid'], last['port']))
+                    log.warning('Trace %s: Loop Dectected on %s port %s!!' %
+                                (self.id, last['dpid'], last['port']))
                     return True
         return 0

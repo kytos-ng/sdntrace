@@ -37,8 +37,12 @@ class TraceManager(object):
 
         # Trace queues
         self._request_queue = dict()
-        self._active_traces = dict()
+        self._active_traces = dict()  # For inter-domain. Future use.
         self._results_queue = dict()
+        self._running_traces = dict()
+
+        # Statistics
+        self._total_traces_requested = 0
 
         # PacketIn queue
         self.trace_pkt_in = []
@@ -58,9 +62,13 @@ class TraceManager(object):
                 try:
                     request_ids = []
                     for req_id in self._request_queue:
-                        entries = self._request_queue[req_id]
-                        new_thread(self._spawn_trace, (req_id, entries,))
-                        request_ids.append(req_id)
+                        if not self.limit_traces_reached():
+                            entries = self._request_queue[req_id]
+                            self._running_traces[req_id] = entries
+                            new_thread(self._spawn_trace, (req_id, entries,))
+                            request_ids.append(req_id)
+                        else:
+                            break
                     # After starting traces for new requests,
                     # remove them from self._request_queue
                     for rid in request_ids:
@@ -80,6 +88,7 @@ class TraceManager(object):
         log.info("Creating thread to trace request id %s..." % trace_id)
         tracer = TracePath(self, trace_id, entries)
         tracer.tracepath()
+        del self._running_traces[trace_id]
 
     def add_result(self, trace_id, result):
         """Used to save trace results to self._results_queue
@@ -90,7 +99,7 @@ class TraceManager(object):
         """
         self._results_queue[trace_id] = result
 
-    def add_to_active_traces(self, trace_id):
+    def add_to_active_traces(self, trace_id, entries):
         """All requested traces are checked first to see if they
         are an intra or an inter domain trace. Then
         self._active_trace is populated with the following
@@ -105,6 +114,7 @@ class TraceManager(object):
 
         Args:
             trace_id: trace ID
+            entries: user parameters
         """
         active = dict()
         active[trace_id] = {}
@@ -115,6 +125,12 @@ class TraceManager(object):
                             'status': 'running',
                             'timestamp': 0}
         self._active_traces[trace_id] = active[trace_id]
+
+        # Add to request_queue
+        self._request_queue[trace_id] = entries
+
+        # Statistics
+        self._total_traces_requested += 1
 
     @staticmethod
     def is_entry_valid(entries):
@@ -159,7 +175,11 @@ class TraceManager(object):
         try:
             return self._results_queue[trace_id]
         except (ValueError, KeyError):
-            return {}
+            if trace_id in self._running_traces:
+                return {'msg': 'trace in process'}
+            elif trace_id in self._request_queue:
+                return {'msg': 'trace pending'}
+            return {'msg': 'unknown trace id'}
 
     def get_results(self):
         """Used by external apps to get all trace results. Useful
@@ -169,6 +189,19 @@ class TraceManager(object):
             list of results
         """
         return self._results_queue
+
+    def limit_traces_reached(self):
+        """ Control the number of active traces running in parallel. Protects the
+        switches and avoid DoS
+
+        :return:
+            True: if the number of traces running is equal/more
+                than settings.PARALLEL_TRACES
+            False: if it is not.
+        """
+        if len(self._running_traces) >= settings.PARALLEL_TRACES:
+            return True
+        return False
 
     def new_trace(self, entries):
         """Receives external requests for traces.
@@ -187,10 +220,8 @@ class TraceManager(object):
             return 0
 
         trace_id = self.get_id()
-        # Add to active_trace queue:
-        self.add_to_active_traces(trace_id)
-        # Add to request_queue
-        self._request_queue[trace_id] = entries
+        # Add to active_trace and _request_queue:
+        self.add_to_active_traces(trace_id, entries)
         return trace_id
 
     def number_pending_requests(self):
@@ -257,7 +288,7 @@ class TraceManager(object):
         return result
 
     def rest_get_result(self, trace_id):
-        """Usedf for the REST GET call
+        """Used for the REST GET call
 
         Returns:
             get_result in JSON format
@@ -265,9 +296,28 @@ class TraceManager(object):
         return self.get_result(trace_id)
 
     def rest_list_results(self):
-        """Usedf for the REST GET call
+        """Used for the REST GET call
 
         Returns:
             get_results in JSON format
         """
         return self.get_results()
+
+    def rest_list_stats(self):
+        """ Used to export some info about the TraceManager.
+        Total number of requests, number of active traces, number of
+        pending traces, list of traces pending
+        Returns:
+                Total number of requests
+                number of active traces
+                number of pending traces
+                list of traces pending
+        """
+        stats = dict()
+        stats['number_of_requests'] = self._total_traces_requested
+        stats['number_of_running_traces'] = len(self._running_traces)
+        # stats['number_of_inter_domain_traces'] = len(self._active_traces)
+        stats['number_of_pending_traces'] = len(self._request_queue)
+        stats['list_of_pending_traces'] = self._results_queue
+
+        return stats

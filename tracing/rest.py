@@ -64,6 +64,4 @@ class FormatRest:
         elif trace_type == 'intertrace':
             pass
         # Add to trace_result array by reference
-        # TODO: any change trace_result becoming an attribute of the
-        # FormatRest class?
         trace_result.append(step)
