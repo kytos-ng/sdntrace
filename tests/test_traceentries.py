@@ -234,7 +234,7 @@ class TestDlVlanPcp(unittest.TestCase):
     def test_incorrect_dl_vlan_pcp_char(self):
         """ dl_vlan_pcp cannot be a char """
         with self.assertRaises(ValueError):
-            self.trace_entries.dl_vlan_pcp = '1'
+            self.trace_entries.dl_vlan_pcp = "1"
 
     def test_incorrect_dl_vlan_pcp_negative(self):
         """ dl_vlan_pcp cannot be negative """
@@ -451,10 +451,10 @@ class TestLoadEntries(unittest.TestCase):
             entries = {}
             self.trace_entries.load_entries(entries)
 
-    def test_wrong_trace(self):
+    def test_trace_non_dict(self):
         """ key trace has to be a dict """
         with self.assertRaises(ValueError):
-            entries = {'trace:': 0}
+            entries = {"trace:": 0}
             self.trace_entries.load_entries(entries)
 
     def test_missing_switch(self):
@@ -467,33 +467,33 @@ class TestLoadEntries(unittest.TestCase):
         """ key trace/switch is mandatory """
         with self.assertRaises(ValueError):
             dpid = {}
-            switch = {'switch': dpid}
-            entries = {'trace': switch}
+            switch = {"switch": dpid}
+            entries = {"trace": switch}
             self.trace_entries.load_entries(entries)
 
     def test_missing_in_port(self):
         """ key trace/switch is mandatory """
         with self.assertRaises(ValueError):
-            dpid = {'dpid': 'a'}
-            switch = {'switch': dpid}
-            entries = {'trace': switch}
+            dpid = {"dpid": 'a'}
+            switch = {"switch": dpid}
+            entries = {"trace": switch}
             self.trace_entries.load_entries(entries)
 
     def test_missing_eth(self):
         """ key trace/switch is mandatory """
         with self.assertRaises(ValueError):
             eth = 0
-            dpid = {'dpid': 'a', 'in_port': 1}
-            switch = {'switch': dpid, 'eth': eth}
-            entries = {'trace': switch}
+            dpid = {"dpid": 'a', "in_port": 1}
+            switch = {"switch": dpid, "eth": eth}
+            entries = {"trace": switch}
             self.trace_entries.load_entries(entries)
 
     def test_minimally_correct(self):
         """ key trace/switch is mandatory """
-        eth = {'dl_vlan': 100}
-        dpid = {'dpid': 'a', 'in_port': 1}
-        switch = {'switch': dpid, 'eth': eth}
-        entries = {'trace': switch}
+        eth = {"dl_vlan": 100}
+        dpid = {"dpid": 'a', "in_port": 1}
+        switch = {"switch": dpid, "eth": eth}
+        entries = {"trace": switch}
         self.trace_entries.load_entries(entries)
 
 

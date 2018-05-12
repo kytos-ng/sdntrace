@@ -10,12 +10,12 @@ from kytos.core import KytosEvent, log
 from napps.amlight.sdntrace import settings
 
 
-def packet_in(event, packet_in):
+def packet_in(event, packet_in_msg):
     """ Process OpenFlow 1.0 PacketIn messages
 
     Args:
         event: PacketIN event
-        packet_in: PacketIn msg
+        packet_in_msg: PacketIn msg
     Return:
         ethernet: PacketIn data
         in_port: in_port
@@ -24,12 +24,12 @@ def packet_in(event, packet_in):
     """
 
     ethernet = Ethernet()
-    ethernet.unpack(packet_in.data.value)
+    ethernet.unpack(packet_in_msg.data.value)
 
     if settings.COLOR_VALUE in ethernet.source.value:
         log.debug("OpenFlow 1.0 PacketIn Trace Msg Received")
 
-        in_port = packet_in.in_port.value
+        in_port = packet_in_msg.in_port.value
         switch = event.source.switch
         return ethernet, in_port, switch
 

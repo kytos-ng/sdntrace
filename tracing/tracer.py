@@ -4,7 +4,6 @@
 import time
 import copy
 from kytos.core import log
-from napps.amlight.sdntrace import settings
 from napps.amlight.sdntrace.tracing.trace_pkt import generate_trace_pkt, prepare_next_packet
 from napps.amlight.sdntrace.tracing.rest import FormatRest
 from napps.amlight.sdntrace.backends.of_parser import send_packet_out
@@ -45,7 +44,6 @@ class TracePath(object):
         self.trace_ended = False
         self.init_switch = self.get_init_switch()
         self.rest = FormatRest()
-        self.mydomain = settings.MY_DOMAIN
 
     def get_init_switch(self):
         """Get the Switch class of the switch requested by user
@@ -53,8 +51,7 @@ class TracePath(object):
         Returns:
             Switch class
         """
-        dpid = self.init_entries['trace']['switch']['dpid']
-        return Switches().get_switch(dpid)
+        return Switches().get_switch(self.init_entries.dpid)
 
     def tracepath(self):
         """
@@ -77,17 +74,18 @@ class TracePath(object):
         # Add initial trace step
         self.rest.add_trace_step(self.trace_result, trace_type='starting',
                                  dpid=switch.dpid,
-                                 port=entries['trace']['switch']['in_port'])
+                                 port=entries.in_port)
 
         # A loop waiting for 'trace_ended'.
         # It changes to True when reaches timeout
         self.tracepath_loop(entries, color, switch)
 
         # Add final result to trace_results_queue
-        t_result = {"request_id": self.id, "result": self.trace_result,
+        t_result = {"request_id": self.id,
+                    "result": self.trace_result,
                     "start_time": str(self.rest.start_time),
                     "total_time": self.rest.get_time(),
-                    "request": self.init_entries}
+                    "request": self.init_entries.init_entries}
 
         self.trace_mgr.add_result(self.id, t_result)
 
@@ -98,8 +96,7 @@ class TracePath(object):
         # A loop waiting for 'trace_ended'.
         # It changes to True when reaches timeout
         while not self.trace_ended:
-            in_port, probe_pkt = generate_trace_pkt(entries, color, self.id,
-                                                    self.mydomain)
+            in_port, probe_pkt = generate_trace_pkt(entries, color, self.id)
             result, packet_in = self.send_trace_probe(switch, in_port,
                                                       probe_pkt)
             if result == 'timeout':
@@ -137,7 +134,6 @@ class TracePath(object):
         timeout_control = 0  # Controls the timeout of 1 second and two tries
 
         while True:
-
             log.warning('Trace %s: Sending POut to switch: %s and in_port %s '
                         % (self.id, switch.dpid, in_port))
             send_packet_out(self.trace_mgr.controller, switch, in_port, probe_pkt)
@@ -187,7 +183,7 @@ class TracePath(object):
         for result in self.trace_result[:-1]:
             if result['dpid'] == last['dpid']:
                 if result['port'] == last['port']:
-                    log.warning('Trace %s: Loop Dectected on %s port %s!!' %
+                    log.warning('Trace %s: Loop Detected on %s port %s!!' %
                                 (self.id, last['dpid'], last['port']))
                     return True
         return 0

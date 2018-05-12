@@ -1,13 +1,23 @@
 {
-    "trace" :
-   {
-      "switch": {
-           "dpid" : "00:00:00:00:00:00:00:04",
-          "in_port": 1
-       },
-      "eth" : {
-           "dl_vlan": 100,
-           "dl_type": 2048
-        }
-   }
+  "trace": {
+    "switch": {
+      "dpid": "00:00:00:00:00:00:00:01",
+      "in_port": 1
+    },
+    "eth": {
+      "dl_vlan": 100,
+      "dl_vlan_pcp": 4,
+      "dl_type": 2048
+    },
+    "ip": {
+      "nw_src": "0.0.0.1",
+      "nw_dst": "0.0.0.2",
+      "nw_tos": 5,
+      "nw_proto": 3
+    },
+    "tp": {
+      "tp_src": 1,
+      "tp_dst": 1
+    }
+  }
 }

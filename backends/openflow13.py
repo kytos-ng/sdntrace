@@ -5,17 +5,17 @@
 
 from pyof.v0x04.common.action import ActionOutput
 from pyof.v0x04.controller2switch.packet_out import PacketOut
-from kytos.core import KytosEvent, log
 from pyof.foundation.network_types import Ethernet
+from kytos.core import KytosEvent, log
 from napps.amlight.sdntrace import settings
 
 
-def packet_in(event, packet_in):
+def packet_in(event, packet_in_msg):
     """ Process OpenFlow 1.3 PacketIn messages
 
     Args:
         event: PacketIN event
-        packet_in: PacketIn msg
+        packet_in_msg: PacketIn msg
     Return:
         ethernet: PacketIn data
         in_port: in_port
@@ -24,7 +24,7 @@ def packet_in(event, packet_in):
     """
 
     ethernet = Ethernet()
-    ethernet.unpack(packet_in.data.value)
+    ethernet.unpack(packet_in_msg.data.value)
 
     if settings.COLOR_VALUE in ethernet.source.value:
         log.debug("OpenFlow 1.3 PacketIn Trace Msg Received")

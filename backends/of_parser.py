@@ -3,7 +3,7 @@
 """
 
 
-from kytos.core import KytosEvent, log
+from kytos.core import log
 import napps.amlight.sdntrace.backends.openflow10 as openflow10
 import napps.amlight.sdntrace.backends.openflow13 as openflow13
 

@@ -4,27 +4,29 @@
 import re
 
 
-dpid_addr = re.compile('([0-9A-Fa-f]{2}[-:]){7}[0-9A-Fa-f]{2}$')
-mac_addr = re.compile('([0-9A-Fa-f]{2}[-:]){5}[0-9A-Fa-f]{2}$')
-ip_addr = re.compile("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
+DPID_ADDR = re.compile('([0-9A-Fa-f]{2}[-:]){7}[0-9A-Fa-f]{2}$')
+MAC_ADDR = re.compile('([0-9A-Fa-f]{2}[-:]){5}[0-9A-Fa-f]{2}$')
+IP_ADDR = re.compile("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
 
 
 class TraceEntries(object):
     """ Class Entries. Used to evaluate entries provided. """
 
     def __init__(self):
-        self._dpid = None
-        self._in_port = None
-        self._dl_src = None
-        self._dl_dst = None
-        self._dl_vlan = None
-        self._dl_type = None
-        self._dl_vlan_pcp = None
-        self._nw_src = None
-        self._nw_dst = None
-        self._nw_tos = None
-        self._tp_src = None
-        self._tp_dst = None
+        self._dpid = 0
+        self._in_port = 0
+        self._dl_src = 0
+        self._dl_dst = 'ca:fe:ca:fe:ca:fe'
+        self._dl_vlan = 0
+        self._dl_type = 2048
+        self._dl_vlan_pcp = 0
+        self._nw_src = '1.1.1.1'
+        self._nw_dst = '1.1.1.2'
+        self._nw_tos = 0
+        self._nw_proto = 0
+        self._tp_src = 0
+        self._tp_dst = 0
+        self.init_entries = dict()  # User request
 
     @property
     def dpid(self):
@@ -55,7 +57,7 @@ class TraceEntries(object):
         elif len(dpid) == 23:
             # DPIDs: 'ab:cd:ef:ab:cd:ef:ab:cd'
             # Valid chars: 0-9, :, a-f, A-Z
-            if re.search(dpid_addr, dpid):
+            if re.search(DPID_ADDR, dpid):
                 error_len = False
             else:
                 error_len = True
@@ -101,7 +103,7 @@ class TraceEntries(object):
         if not isinstance(dl_src, str):
             raise ValueError("Error: dl_src has to be string")
 
-        elif not re.search(mac_addr, dl_src):
+        elif not re.search(MAC_ADDR, dl_src):
             # DPIDs: 'ab:cd:ef:ab:cd:ef'
             # Valid chars: 0-9, :, a-f, A-Z
             msg = "Error: dl_src allows char [a-f], int, and :. Lengths: 17"
@@ -126,7 +128,7 @@ class TraceEntries(object):
         if not isinstance(dl_dst, str):
             raise ValueError("Error: dl_dst has to be string")
 
-        elif not re.search(mac_addr, dl_dst):
+        elif not re.search(MAC_ADDR, dl_dst):
             # DPIDs: 'ab:cd:ef:ab:cd:ef'
             # Valid chars: 0-9, :, a-f, A-Z
             msg = "Error: dl_dst allows char [a-f], int, and :. Lengths: 17"
@@ -210,7 +212,7 @@ class TraceEntries(object):
         if not isinstance(nw_src, str):
             raise ValueError("Error: nw_src has to be string")
 
-        elif not re.search(ip_addr, nw_src):
+        elif not re.search(IP_ADDR, nw_src):
             # Filters: 0.0.0.1 to 255.255.255.255
             msg = "Error: nw_src is not a proper IPv4"
             raise ValueError(msg)
@@ -229,12 +231,28 @@ class TraceEntries(object):
         if not isinstance(nw_dst, str):
             raise ValueError("Error: nw_dst has to be string")
 
-        elif not re.search(ip_addr, nw_dst):
+        elif not re.search(IP_ADDR, nw_dst):
             # Filters: 0.0.0.1 to 255.255.255.255
             msg = "Error: nw_dst is not a proper IPv4"
             raise ValueError(msg)
 
         self._nw_dst = nw_dst
+
+    @property
+    def nw_proto(self):
+        """ nw_proto Getter """
+        return self._nw_proto
+
+    @nw_proto.setter
+    def nw_proto(self, nw_proto):
+        """ nw_proto Setter """
+        if not isinstance(nw_proto, int):
+            raise ValueError("Error: nw_proto has to be integer")
+        else:
+            if not 0 < nw_proto <= 65535:
+                raise ValueError("Error: nw_proto has to be between 0 and 65535")
+
+        self._nw_proto = nw_proto
 
     @property
     def tp_src(self):
@@ -276,15 +294,15 @@ class TraceEntries(object):
         """
         # Basic entries['trace']
         if 'trace' not in entries:
-            raise ValueError("Error: Trace entry missing")
-        elif not isinstance(entries, dict):
-            raise ValueError("Error: switch has to be dict")
+            raise ValueError("Error: Trace key entry missing")
+        elif not isinstance(entries['trace'], dict):
+            raise ValueError("Error: Trace has to be dict")
 
         trace = entries['trace']
 
         # Basic entries['trace']['switch']
         if 'switch' not in trace:
-            raise ValueError("Error: switch not provided")
+            raise ValueError("Error: switch key not provided")
         elif not isinstance(trace['switch'], dict):
             raise ValueError("Error: switch has to be dict")
 
@@ -347,3 +365,5 @@ class TraceEntries(object):
 
             if 'tp_dst' in tp_:
                 self.tp_dst = tp_['tp_dst']
+
+        self.init_entries = entries

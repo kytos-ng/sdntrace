@@ -31,7 +31,7 @@ from napps.amlight.sdntrace.tracing.trace_manager import TraceManager
 from napps.amlight.sdntrace.backends.of_parser import process_packet_in
 
 
-VERSION = '0.2'
+VERSION = '0.3'
 
 
 class Main(KytosNApp):
@@ -41,6 +41,7 @@ class Main(KytosNApp):
         /sdntrace/trace ['PUT'] - request a trace
         /sdntrace/trace ['GET'] - list of previous trace requests and results
         /sdntrace/trace/<trace_id> - get the results of trace requested
+        /sdntrace/stats - Show the number of requests received and active
         /sdntrace/settings - list the settings
     """
 
@@ -56,16 +57,17 @@ class Main(KytosNApp):
 
     @listen_to('kytos/of_core.v0x0[14].messages.in.ofpt_packet_in')
     def handle_packet_in(self, event):
-        """ Receives OpenFlow PacketIn msgs
-        and search from trace packets.
+        """ Receives OpenFlow PacketIn msgs and search from trace packets.
+        If process_packet_in returns 0,0,0, it means it is not a probe
+        packet. Otherwise, store the msg for later use by Tracers.
 
         Args:
             event (KycoPacketIn): Received Event
         """
         ethernet, in_port, switch = process_packet_in(event)
         if not isinstance(ethernet, int):
-            self.tracing.process_probe_packet(event, ethernet,
-                                              in_port, switch)
+            self.tracing.queue_probe_packet(event, ethernet,
+                                            in_port, switch)
 
     def execute(self):
         """ Kytos Napp execute method """

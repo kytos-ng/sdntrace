@@ -1,141 +1,98 @@
 """
-    This module has functions used to create the Ethernet frame
+    This module has functions used to pack and unpack the Ethernet frame
      used by PacketOuts and PacketIns.
 """
 
 
 import dill
 from pyof.foundation.network_types import Ethernet, IPv4, VLAN
-from napps.amlight.sdntrace import settings, constants
+from napps.amlight.sdntrace import constants
 from napps.amlight.sdntrace.tracing.trace_msg import TraceMsg
-from napps.amlight.sdntrace.shared.extd_nw_types import TCP, UDP
+# from napps.amlight.sdntrace.shared.extd_nw_types import TCP, UDP
 from napps.amlight.sdntrace.shared.switches import Switches
 from napps.amlight.sdntrace.shared.colors import Colors
 
 
-def generate_trace_pkt(entries, color, r_id, my_domain):
+def generate_trace_pkt(trace_entries, color, r_id):
     """ Receives the REST/PUT to generate a PacketOut
-    data needs to be serialized.
+    data needs to be serialized. The goal is always to create
+    a packet with data being the TraceMsg to differentiate different
+    traces running in parallel. We will stack layers depending of
+    the user request. If user submits just a VLAN ID, we will use
+    ethertype 88b5 and add TraceMsg after it. Same for IP, however
+    the protocol will be 65535. If user provides all the way to TCP/UDP
+    we will add TraceMsg after it. First thing is to discover
+    what it is that the user has provided.
 
     Args:
-        entries: provided by user or collected from PacketIn
+        trace_entries: TraceEntries provided by user or collected from PacketIn
         color: result from Coloring Napp for a specific DPID
-        r_id:
-        my_domain:
+        r_id: request ID
 
     Returns:
-        in_port:
-        pkt:
+        in_port: in_port
+        pkt: serialized Ethernet frame
     """
 
-    trace = {}
-    switch = {}
-    eth = {}
-    ip = {}
-    tp = {}
+    ethernet = _create_ethernet_frame(trace_entries, color)
 
-    # TODO Validate for dl_vlan. If empty, return error.
+    msg = TraceMsg(r_id)
 
-    # Default values
-    dpid, in_port = 0, 65532
-    if color['color_field'] == 'dl_src':
-        dl_src = color['color_value']
-    else:
-        dl_src = '0e:55:05:0e:55:05'
-    dl_dst = "ca:fe:ca:fe:ca:fe"
-    dl_vlan, dl_type, dl_vlan_pcp = 100, constants.IPV4, 0
-    nw_src, nw_dst, nw_tos = '127.0.0.1', '127.0.0.1', 0
-    tp_src, tp_dst = 1, 1
+    if ethernet.ether_type == constants.IPV4:
+        ip_pkt = _create_ip_packet(trace_entries)
+        if ip_pkt.protocol == constants.TCP:
+            # No dissector for TCP yet
+            ip_pkt.data = dill.dumps(msg)
 
-    try:
-        trace = entries['trace']
-        switch = trace['switch']
-        eth = trace['eth']
-    except:
-        pass
+            # tp_pkt = _create_tcp_packet(trace_entries)
+            # ip_pkt.data = tp_pkt.pack()
+        elif ip_pkt.protocol == constants.UDP:
+            # No dissector for UDP yet
+            ip_pkt.data = dill.dumps(msg)
 
-    try:
-        ip = trace['ip']
-    except:
-        pass
+            # tp_pkt = _create_udp_packet(trace_entries)
+            # ip_pkt.data = tp_pkt.pack()
+        else:
+            ip_pkt.data = dill.dumps(msg)
 
-    try:
-        tp = trace['tp']
-    except:
-        pass
-
-    if len(switch) > 0:
-        dpid, in_port = prepare_switch(switch, dpid, in_port)
-
-    if len(eth) > 0:
-        dl_src, dl_dst, dl_vlan, dl_type, dl_vlan_pcp = prepare_ethernet(
-            eth,
-            dl_src,
-            dl_dst,
-            dl_vlan,
-            dl_type,
-            dl_vlan_pcp
-        )
-    # if len(ip) > 0:
-    nw_src, nw_dst, nw_tos = prepare_ip(ip, nw_src, nw_dst, nw_tos)
-
-    # if len(tp) > 0:
-    tp_src, tp_dst = prepare_tp(tp, tp_src, tp_dst)
-
-    ethernet = Ethernet()
-    ethernet.ether_type = int(dl_type)
-    ethernet.source = dl_src
-    ethernet.destination = dl_dst
-
-    vlan = VLAN(vid=int(dl_vlan), pcp=dl_vlan_pcp)
-    ethernet.vlans.append(vlan)
-
-    msg = TraceMsg(r_id, my_domain)
-
-    if int(dl_type) == constants.IPV4:
-        ip = IPv4()
-        ip.destination = nw_dst
-        ip.source = nw_src
-        # ip.protocol = 6
-        ip.data = dill.dumps(msg)
-        ethernet.data = ip.pack()
+        ethernet.data = ip_pkt.pack()
     else:
         ethernet.data = dill.dumps(msg)
 
     pkt = ethernet.pack()
-    return in_port, pkt
+    return trace_entries.in_port, pkt
 
 
-def prepare_next_packet(entries, result, ev):
+def prepare_next_packet(trace_entries, result, event):
     """ Used to support VLAN translation. Currently, it does not
     support translation of other fields, such as MAC addresses.
 
     Args:
-        entries:
-        result:
-        ev:
+        trace_entries: TraceEntries provided by user or collected from PacketIn
+        result: Result of the last Trace Probe sent.
+        event: PacketIn event
 
     Returns:
-        entries:
+        trace_entries: TraceEntries customized with new VLAN
         color: result from Coloring Napp for a specific DPID
-        switch:
+        switch: DPID
     """
     dpid = result['dpid']
-    switch, color = get_node_color_from_dpid(dpid)
+    switch, color = _get_node_color_from_dpid(dpid)
 
-    entries['trace']['switch']['dpid'] = dpid
+    trace_entries.dpid = dpid
 
-    if ev.content['message'].header.version == 1:
-        in_port = ev.content['message'].in_port.value
-        entries['trace']['switch']['in_port'] = in_port
+    if event.content['message'].header.version == 1:
+        in_port = event.content['message'].in_port.value
+        trace_entries.in_port = in_port
     else:
-        in_port = ev.message.in_port
-        entries['trace']['switch']['in_port'] = in_port
+        in_port = event.message.in_port
+        trace_entries.in_port = in_port
 
-    entries['trace']['eth']['dl_vlan'] = get_vlan_from_pkt(
-        ev.content['message'].data.value)
+    trace_entries.dl_vlan = _get_vlan_from_pkt(
+        event.content['message'].data.value)
 
-    return entries, color, switch
+    return trace_entries, color, switch
 
 
 def process_packet(ethernet):
@@ -149,92 +106,118 @@ def process_packet(ethernet):
     Returns:
         TraceMsg in the binary format
     """
-    etype = ethernet.ether_type
     offset = 0
 
     trace_msg = ethernet.data.value
 
-    if etype == constants.IPV4:
-        ip = IPv4()
-        ip.unpack(ethernet.data.value, offset)
-        offset += ip.length
-        trace_msg = extract_trace_msg(ip.data)
+    if ethernet.ether_type == constants.IPV4:
+        ip_pkt = IPv4()
+        ip_pkt.unpack(ethernet.data.value, offset)
+        offset += ip_pkt.length
+        trace_msg = ip_pkt.data
 
-        if ip.protocol == constants.TCP:
-            transport = TCP()
-            transport.parse(ethernet.data.value, offset)
-            offset += transport.length
-            trace_msg = extract_trace_msg(transport.data)
+        if ip_pkt.protocol == constants.TCP:
+            # TCP and UDP are not yet supported
+            # transport = TCP()
+            # transport.parse(ethernet.data.value, offset)
+            # offset += transport.length
+            # trace_msg = transport.data
+            trace_msg = ip_pkt.data
 
-        if ip.protocol == constants.UDP:
-            transport = UDP()
-            transport.parse(ethernet.data.value, offset)
-            offset += transport.length
-            trace_msg = extract_trace_msg(transport.data)
+        if ip_pkt.protocol == constants.UDP:
+            # transport = UDP()
+            # transport.parse(ethernet.data.value, offset)
+            # offset += transport.length
+            # trace_msg = transport.data
+            trace_msg = ip_pkt.data
 
     return trace_msg
 
 
-def extract_trace_msg(data):
-    try:
-        return data.value
-    except:
-        return data
+def _create_ethernet_frame(trace_entries, color):
+    """ Create an Ethernet frame using TraceEntries
+    and color (dl_src)
+
+    Args:
+        trace_entries: TraceEntries provided by user or collected from PacketIn
+        color: field and value that indicate the color
+    Returns:
+        ethernet frame
+    """
+    ethernet = Ethernet()
+    ethernet.ether_type = trace_entries.dl_type
+
+    ethernet.source = color['color_value']
+    ethernet.destination = trace_entries.dl_dst
+
+    vlan = VLAN(vid=trace_entries.dl_vlan,
+                pcp=trace_entries.dl_vlan_pcp)
+    ethernet.vlans.append(vlan)
+    return ethernet
 
 
-def get_node_color_from_dpid(dpid):
+def _create_ip_packet(trace_entries):
+    """ Create an IP packet using TraceEntries
+
+    Args:
+        trace_entries: TraceEntries provided by user or collected from PacketIn
+    Returns:
+        ip packet
+    """
+    ip_pkt = IPv4()
+    ip_pkt.destination = trace_entries.nw_dst
+    ip_pkt.source = trace_entries.nw_src
+    ip_pkt.dscp = trace_entries.nw_tos
+    ip_pkt.protocol = trace_entries.nw_proto
+    return ip_pkt
+
+
+def _create_tcp_packet(trace_entries):
+    """ Create a TCP packet using TraceEntries (FUTURE)
+
+    Args:
+        trace_entries: TraceEntries provided by user or collected from PacketIn
+    Returns:
+        tcp packet
+    """
+    return trace_entries
+
+
+def _create_udp_packet(trace_entries):
+    """ Create an UDP datagram using TraceEntries (FUTURE)
+
+    Args:
+        trace_entries: TraceEntries provided by user or collected from PacketIn
+    Returns:
+        tcp message
+    """
+    return trace_entries
+
+
+def _get_node_color_from_dpid(dpid):
+    """ Get node color from Coloring Napp
+
+    Args:
+        dpid: switch DPID
+    Returns:
+        switch and color
+        0 for not Found
+    """
     for switch in Switches().get_switches():
         if dpid == switch.dpid:
             return switch, Colors().get_switch_color(switch.dpid)
     return 0
 
 
-def get_vlan_from_pkt(data):
+def _get_vlan_from_pkt(data):
+    """ Get VLAN ID from frame. Used for VLAN Translation
+
+    Args:
+        data: Ethernet Frame
+    Returns:
+        VLAN VID
+    """
     ethernet = Ethernet()
     ethernet.unpack(data)
     vlan = ethernet.vlans[0]
     return vlan.vid
-
-
-def prepare_switch(switch, dpid, in_port):
-    for idx in switch:
-        if idx == 'dpid':
-            dpid = switch[idx]
-        elif idx == 'in_port':
-            in_port = switch[idx]
-    return dpid, in_port
-
-
-def prepare_ethernet(eth, dl_src, dl_dst, dl_vlan, dl_type, dl_vlan_pcp):
-    for idx in eth:
-        if idx == 'dl_src':
-            dl_src = eth[idx]
-        elif idx == 'dl_dst':
-            dl_dst = eth[idx]
-        elif idx == 'dl_vlan':
-            dl_vlan = eth[idx]
-        elif idx == 'dl_type':
-            dl_type = eth[idx]
-        elif idx == 'dl_vlan_pcp':
-            dl_vlan_pcp = eth[idx]
-    return dl_src, dl_dst, dl_vlan, dl_type, dl_vlan_pcp
-
-
-def prepare_ip(ip, nw_src, nw_dst, nw_tos):
-    for idx in ip:
-        if idx == 'nw_src':
-            nw_src = ip[idx]
-        elif idx == 'nw_dst':
-            nw_dst = ip[idx]
-        elif idx == 'nw_tos':
-            nw_tos = ip[idx]
-    return nw_src, nw_dst, nw_tos
-
-
-def prepare_tp(tp, tp_src, tp_dst):
-    for idx in tp:
-        if idx == 'tp_src':
-            tp_src = tp[idx]
-        elif idx == 'tp_dst':
-            tp_dst = tp[idx]
-    return tp_src, tp_dst

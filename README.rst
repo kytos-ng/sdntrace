@@ -1,6 +1,6 @@
 Overview
 ========
-An OpenFlow Path Trace for Kytos SDN controller v0.2
+An OpenFlow Path Trace for Kytos SDN controller v0.3
 
 Requirements
 ============
@@ -30,6 +30,10 @@ This napp is based on the following ACM paper:
 Agarwal, K., Rozner, E., Dixon, C., & Carter, J. (2014, August). SDN traceroute:
   Tracing SDN forwarding without changing network behavior. In Proceedings of the
   third workshop on Hot topics in software defined networking (pp. 145-150). ACM.
+
+PyLint
+======
+Disable the following messages: F0401,E0611,R0913,R0912,R0902,R0915,R0903
 
 License
 =======

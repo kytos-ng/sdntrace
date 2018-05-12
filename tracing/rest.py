@@ -1,6 +1,5 @@
 """ This module creates the trace result to be exported via REST.
 Each active trace will instantiate a FormatRest and publish it.
-
 """
 from datetime import datetime
 from napps.amlight.sdntrace.shared.switches import Switches
@@ -33,16 +32,16 @@ class FormatRest:
 
     def add_trace_step(self, trace_result, trace_type, reason='done',
                        dpid=None, port=None, msg="none"):
-        """
-            Used to create the new REST result.
-                Only this method should write to self.trace_result
-            Args:
-                trace_result: variable with results
-                trace_type: type of trace (intra or inter-domain)
-                reason: reason in case trace_type == last
-                dpid: switch's dpid
-                port: switch's OpenFlow port_no
-                msg: message in case of reason == error
+        """ Used to create the new REST result.vOnly this method
+        should write to self.trace_result
+
+        Args:
+            trace_result: variable with results
+            trace_type: type of trace (intra or inter-domain)
+            reason: reason in case trace_type == last
+            dpid: switch's dpid
+            port: switch's OpenFlow port_no
+            msg: message in case of reason == error
         """
         step = dict()
         step["type"] = trace_type
@@ -61,7 +60,6 @@ class FormatRest:
             step["reason"] = reason
             step["msg"] = msg
             step["time"] = self.get_time()
-        elif trace_type == 'intertrace':
-            pass
+
         # Add to trace_result array by reference
         trace_result.append(step)
