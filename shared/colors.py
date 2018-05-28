@@ -32,7 +32,7 @@ class Colors(object):
                 self._colors = result['colors']
             else:
                 raise Exception
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-except
             log.error('Error: Can not connect to Kytos/Coloring: %s' % err)
 
     def get_switch_color(self, dpid):

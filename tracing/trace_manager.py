@@ -73,7 +73,7 @@ class TraceManager(object):
                     # remove them from self._request_queue
                     for rid in new_request_ids:
                         del self._request_queue[rid]
-                except Exception as error:
+                except Exception as error:  # pylint: disable=broad-except
                     log.error("Trace Error: %s" % error)
             time.sleep(trace_interval)
 
@@ -100,7 +100,8 @@ class TraceManager(object):
         self._results_queue[trace_id] = result
 
     def avoid_duplicated_request(self, entries):
-        """Verify if any of the requested queries has the same entries. If so, ignore it
+        """Verify if any of the requested queries has the same entries.
+        If so, ignore it
 
         Args:
             entries: entries provided by user via REST.
@@ -257,7 +258,7 @@ class TraceManager(object):
             return result
 
         if self.avoid_duplicated_request(entries):
-            result['result'] = {'error': "Ignoring Duplicated Trace Request Received"}
+            result['result'] = {'error': "Duplicated Trace Request ignored"}
             return result
 
         trace_id = self.new_trace(trace_entries)

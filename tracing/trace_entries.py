@@ -6,7 +6,8 @@ import re
 
 DPID_ADDR = re.compile('([0-9A-Fa-f]{2}[-:]){7}[0-9A-Fa-f]{2}$')
 MAC_ADDR = re.compile('([0-9A-Fa-f]{2}[-:]){5}[0-9A-Fa-f]{2}$')
-IP_ADDR = re.compile("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
+IP_ADDR = re.compile("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}"
+                     "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
 
 
 class TraceEntries(object):
@@ -44,7 +45,7 @@ class TraceEntries(object):
         if not isinstance(dpid, str):
             raise ValueError("Error: dpid has to be string")
 
-        if 0 < len(dpid) <= 16:  # pylint: disable=C1801
+        if 0 < len(dpid) <= 16:  # pylint: disable=len-as-condition
             # DPIDs: '1', 'a', '0000000000000001', 'abcdefabcdefabcd'
             if dpid.isalnum():
                 if not re.search('[g-z]', dpid.lower()):
@@ -64,8 +65,8 @@ class TraceEntries(object):
         else:
             error_len = True
 
-        if error_len:  # pylint: disable=E0601
-            msg = "Error: dpid allows char [a-f], int, and :. Lengths: 1-16 and 23"
+        if error_len:
+            msg = "Error: dpid allows [a-f], int, and :. Lengths: 1-16 and 23"
             raise ValueError(msg)
 
         self._dpid = dpid
@@ -164,7 +165,7 @@ class TraceEntries(object):
             raise ValueError("Error: dl_type has to be integer")
         else:
             if not 0 < dl_type <= 65535:
-                raise ValueError("Error: dl_type has to be between 0 and 65535")
+                raise ValueError("Error: dl_type has to be [0-65535]")
 
         self._dl_type = dl_type
 
@@ -180,7 +181,7 @@ class TraceEntries(object):
             raise ValueError("Error: dl_vlan_pcp has to be integer")
         else:
             if not 0 < dl_vlan_pcp <= 7:
-                raise ValueError("Error: dl_vlan_pcp has to be between 0 and 7")
+                raise ValueError("Error: dl_vlan_pcp has to be [0-7]")
 
         self._dl_vlan_pcp = dl_vlan_pcp
 
@@ -250,7 +251,7 @@ class TraceEntries(object):
             raise ValueError("Error: nw_proto has to be integer")
         else:
             if not 0 < nw_proto <= 65535:
-                raise ValueError("Error: nw_proto has to be between 0 and 65535")
+                raise ValueError("Error: nw_proto has to be [0-65535]")
 
         self._nw_proto = nw_proto
 

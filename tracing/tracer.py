@@ -4,7 +4,8 @@
 import time
 import copy
 from kytos.core import log
-from napps.amlight.sdntrace.tracing.trace_pkt import generate_trace_pkt, prepare_next_packet
+from napps.amlight.sdntrace.tracing.trace_pkt import generate_trace_pkt
+from napps.amlight.sdntrace.tracing.trace_pkt import prepare_next_packet
 from napps.amlight.sdntrace.tracing.rest import FormatRest
 from napps.amlight.sdntrace.backends.of_parser import send_packet_out
 from napps.amlight.sdntrace.shared.switches import Switches
@@ -31,7 +32,8 @@ class TracePath(object):
     def __init__(self, trace_manager, r_id, initial_entries):
         """
         Args:
-            trace_manager: main TraceManager class - needed for Kytos.controller
+            trace_manager: main TraceManager class - needed for
+            Kytos.controller
             r_id: request ID
             initial_entries: user entries for trace
         """
@@ -101,7 +103,7 @@ class TracePath(object):
                                                       probe_pkt)
             if result == 'timeout':
                 self.rest.add_trace_step(self.trace_result, trace_type='last')
-                log.warning("Trace %s: Intra-Domain Trace Completed!" % self.id)
+                log.warning("Trace %s: Trace Completed!" % self.id)
                 self.trace_ended = True
             else:
                 self.rest.add_trace_step(self.trace_result,
@@ -136,7 +138,8 @@ class TracePath(object):
         while True:
             log.warning('Trace %s: Sending POut to switch: %s and in_port %s '
                         % (self.id, switch.dpid, in_port))
-            send_packet_out(self.trace_mgr.controller, switch, in_port, probe_pkt)
+            send_packet_out(self.trace_mgr.controller,
+                            switch, in_port, probe_pkt)
 
             time.sleep(0.5)  # Wait 0.5 second before querying for PacketIns
             timeout_control += 1
