@@ -2,7 +2,7 @@
     Test tracing.trace_entries
 """
 import unittest
-from tracing.trace_entries import TraceEntries
+from sdntrace.tracing.trace_entries import TraceEntries
 
 
 class TestDpid(unittest.TestCase):

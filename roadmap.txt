@@ -1,0 +1,6 @@
+Better integration with Napp Coloring to get the color_field
+Develop classes TCP and UDP
+settings will be writable through REST
+Sphinx
+Move repo to GitLab
+Add pylint and pytest routines to Gitlab
