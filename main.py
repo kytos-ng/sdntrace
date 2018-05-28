@@ -50,10 +50,10 @@ class Main(KytosNApp):
         log.info("Starting Kytos SDNTrace App version %s!" % VERSION)
 
         # Create list of switches
-        self.switches = Switches(self.controller.switches)
+        self.switches = Switches(self.controller.switches)  # pylint: disable=W0201
 
         # Instantiate TraceManager
-        self.tracing = TraceManager(self.controller)
+        self.tracing = TraceManager(self.controller)  # pylint: disable=W0201
 
     @listen_to('kytos/of_core.v0x0[14].messages.in.ofpt_packet_in')
     def handle_packet_in(self, event):
