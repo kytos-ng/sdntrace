@@ -50,8 +50,8 @@ class Main(KytosNApp):
         log.info("Starting Kytos SDNTrace App version %s!" % VERSION)
 
         # Create list of switches
-        self.switches = \
-            Switches(self.controller.switches)  # pylint: disable=W0201
+        self.switches = Switches(
+            self.controller.switches)  # pylint: disable=W0201
 
         # Instantiate TraceManager
         self.tracing = TraceManager(self.controller)  # pylint: disable=W0201
