@@ -8,7 +8,7 @@ path directly from the data plane. Originally written for Ryu
 
 Steps:
     1 - User requests a trace using a specific flow characteristic,
-        for example VLAN = 1000 and Dest TCP Port = 25
+        for example VLAN = 1000 and Dest IP address = 2.2.2.2
     2 - REST module inserts trace request in a queue provided by the
         TraceManager
     3 - The TraceManager runs the Tracer, basically sending PacketOuts
@@ -124,7 +124,6 @@ class Main(KytosNApp):
         settings_dict = dict()
         settings_dict['color_field'] = settings.COLOR_FIELD
         settings_dict['color_value'] = settings.COLOR_VALUE
-        settings_dict['my_domain'] = settings.MY_DOMAIN
         settings_dict['trace_interval'] = settings.TRACE_INTERVAL
         settings_dict['parallel_traces'] = settings.PARALLEL_TRACES
         settings_dict['sdntrace_version'] = VERSION

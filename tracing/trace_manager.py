@@ -30,9 +30,6 @@ class TraceManager(object):
         # Controller
         self.controller = controller
 
-        # Configs
-        self._my_domain = settings.MY_DOMAIN
-
         # Trace ID used to distinguish each trace
         self._id = 30000
 
