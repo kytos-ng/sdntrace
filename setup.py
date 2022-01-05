@@ -34,7 +34,7 @@ INSTALLED_PATH = VAR_PATH / 'napps' / '.installed'
 CURRENT_DIR = Path('.').resolve()
 
 # NApps enabled by default
-CORE_NAPPS = ['coloring']
+ENABLED_NAPPS = [('amlight', 'coloring')]
 
 
 class SimpleCommand(Command):
@@ -174,8 +174,8 @@ class KytosInstall:
     def enable_core_napps():
         """Enable a NAPP by creating a symlink."""
         (ENABLED_PATH / NAPP_USERNAME).mkdir(parents=True, exist_ok=True)
-        for napp in CORE_NAPPS:
-            napp_path = Path('kytos', napp)
+        for (user, napp) in ENABLED_NAPPS:
+            napp_path = Path(user, napp)
             src = ENABLED_PATH / napp_path
             dst = INSTALLED_PATH / napp_path
             symlink_if_different(src, dst)
