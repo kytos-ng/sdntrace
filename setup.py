@@ -204,7 +204,7 @@ class EggInfo(egg_info):
         """Python wheels are much faster (no compiling)."""
         print('Installing dependencies...')
         check_call([sys.executable, '-m', 'pip', 'install', '-r',
-                    'requirements.txt'])
+                    'requirements/run.txt'])
 
 
 class DevelopMode(develop):
@@ -250,6 +250,16 @@ class DevelopMode(develop):
         symlink_if_different(src, dst)
 
 
+def read_requirements(path="requirements/run.txt"):
+    """Read requirements file and return a list."""
+    with open(path, "r", encoding="utf8") as file:
+        return [
+            line.strip()
+            for line in file.readlines()
+            if not line.startswith("#")
+        ]
+
+
 def symlink_if_different(path, target):
     """Force symlink creation if it points anywhere else."""
     # print(f"symlinking {path} to target: {target}...", end=" ")
@@ -270,7 +280,7 @@ setup(name=f'{NAPP_USERNAME}_{NAPP_NAME}',
       author='Jeronimo Bezerra',
       author_email='jab@amlight.net',
       license='MIT',
-      install_requires=['flask', 'kytos'],
+      install_requires=read_requirements(),
       setup_requires=['pytest-runner'],
       tests_require=['pytest'],
       extras_require={
