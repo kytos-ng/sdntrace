@@ -5,7 +5,7 @@
   <div align="center">
     <h1><code>amlight/sdntrace</code></h1>
 
-    <strong> Napp that traces OpenFlow paths in the dataplane</strong>
+    <strong> Napp that traces OpenFlow paths in the data plane</strong>
 
     <h3><a href="https://kytos-ng.github.io/api/sdntrace.html">OpenAPI Docs</a></h3>
   </div>

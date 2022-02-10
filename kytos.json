@@ -3,7 +3,7 @@
   "username": "amlight",
   "name": "sdntrace",
   "description": "An OpenFlow Data Path Tracing",
-  "version": "0.2",
+  "version": "2022.1.0",
   "napp_dependencies": ["amlight/coloring"],
   "license": "GPL3.0",
   "tags": ["experimental", "coloring"],
