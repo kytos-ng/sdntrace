@@ -1,11 +1,11 @@
 """
     Test tracing.trace_entries
 """
-import unittest
+from unittest import TestCase
 from sdntrace.tracing.trace_entries import TraceEntries
 
 
-class TestDpid(unittest.TestCase):
+class TestDpid(TestCase):
     """ Test all combinations for DPID """
 
     def setUp(self):
@@ -55,7 +55,7 @@ class TestDpid(unittest.TestCase):
         self.assertEqual(self.trace_entries.dpid, 'ab:cd:ef:ab:cd:ef:00:01')
 
 
-class TestInPort(unittest.TestCase):
+class TestInPort(TestCase):
     """ Test all combinations for IN_PORT """
 
     def setUp(self):
@@ -81,7 +81,7 @@ class TestInPort(unittest.TestCase):
         self.assertEqual(self.trace_entries.in_port, 1)
 
 
-class TestDlSrc(unittest.TestCase):
+class TestDlSrc(TestCase):
     """ Test all combinations for DL_SRC """
 
     def setUp(self):
@@ -122,7 +122,7 @@ class TestDlSrc(unittest.TestCase):
         self.assertEqual(self.trace_entries.dl_src, 'ab:cd:ef:ab:cd:00')
 
 
-class TestDlDst(unittest.TestCase):
+class TestDlDst(TestCase):
     """ Test all combinations for DL_DST """
 
     def setUp(self):
@@ -163,7 +163,7 @@ class TestDlDst(unittest.TestCase):
         self.assertEqual(self.trace_entries.dl_dst, 'ab:cd:ef:ab:cd:00')
 
 
-class TestDlVlan(unittest.TestCase):
+class TestDlVlan(TestCase):
     """ Test all combinations for DL_VLAN """
 
     def setUp(self):
@@ -194,7 +194,7 @@ class TestDlVlan(unittest.TestCase):
         self.assertEqual(self.trace_entries.dl_vlan, 1)
 
 
-class TestDlType(unittest.TestCase):
+class TestDlType(TestCase):
     """ Test all combinations for dl_type """
 
     def setUp(self):
@@ -225,7 +225,7 @@ class TestDlType(unittest.TestCase):
         self.assertEqual(self.trace_entries.dl_type, 1)
 
 
-class TestDlVlanPcp(unittest.TestCase):
+class TestDlVlanPcp(TestCase):
     """ Test all combinations for dl_vlan_pcp """
 
     def setUp(self):
@@ -256,7 +256,7 @@ class TestDlVlanPcp(unittest.TestCase):
         self.assertEqual(self.trace_entries.dl_vlan_pcp, 1)
 
 
-class TestNwTos(unittest.TestCase):
+class TestNwTos(TestCase):
     """ Test all combinations for nw_tos """
 
     def setUp(self):
@@ -287,7 +287,7 @@ class TestNwTos(unittest.TestCase):
         self.assertEqual(self.trace_entries.nw_tos, 1)
 
 
-class TestNwSrc(unittest.TestCase):
+class TestNwSrc(TestCase):
     """ Test all combinations for NW_SRC """
 
     def setUp(self):
@@ -332,7 +332,7 @@ class TestNwSrc(unittest.TestCase):
         self.assertEqual(self.trace_entries.nw_src, '255.255.255.255')
 
 
-class TestNwDst(unittest.TestCase):
+class TestNwDst(TestCase):
     """ Test all combinations for NW_DST """
 
     def setUp(self):
@@ -377,7 +377,7 @@ class TestNwDst(unittest.TestCase):
         self.assertEqual(self.trace_entries.nw_dst, '255.255.255.255')
 
 
-class TestTpSrc(unittest.TestCase):
+class TestTpSrc(TestCase):
     """ Test all combinations for tp_src """
 
     def setUp(self):
@@ -408,7 +408,7 @@ class TestTpSrc(unittest.TestCase):
         self.assertEqual(self.trace_entries.tp_src, 1)
 
 
-class TestTpDst(unittest.TestCase):
+class TestTpDst(TestCase):
     """ Test all combinations for tp_dst """
 
     def setUp(self):
@@ -439,7 +439,7 @@ class TestTpDst(unittest.TestCase):
         self.assertEqual(self.trace_entries.tp_dst, 1)
 
 
-class TestLoadEntries(unittest.TestCase):
+class TestLoadEntries(TestCase):
     """ Now, load all entries at once"""
 
     def setUp(self):
@@ -495,7 +495,3 @@ class TestLoadEntries(unittest.TestCase):
         switch = {"switch": dpid, "eth": eth}
         entries = {"trace": switch}
         self.trace_entries.load_entries(entries)
-
-
-if __name__ == '__main__':
-    unittest.main()
