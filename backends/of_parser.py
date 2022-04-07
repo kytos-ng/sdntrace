@@ -3,9 +3,9 @@
 """
 
 
-from kytos.core import log
 import napps.amlight.sdntrace.backends.openflow10 as openflow10
 import napps.amlight.sdntrace.backends.openflow13 as openflow13
+from kytos.core import log
 
 
 def process_packet_in(event):

@@ -1,9 +1,8 @@
 """Module to test the main napp file."""
 from unittest import TestCase
 from unittest.mock import patch
-from napps.amlight.sdntrace.tests.helpers import (
-    get_controller_mock,
-)
+
+from napps.amlight.sdntrace.tests.helpers import get_controller_mock
 
 
 # pylint: disable=too-many-public-methods, too-many-lines
@@ -23,7 +22,7 @@ class TestMain(TestCase):
         # decorated with them are imported.
         patch("kytos.core.helpers.run_on_thread", lambda x: x).start()
         # pylint: disable=import-outside-toplevel
-        from sdntrace.main import Main
+        from napps.amlight.sdntrace.main import Main
 
         self.napp = Main(get_controller_mock())
 

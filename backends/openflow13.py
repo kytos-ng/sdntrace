@@ -3,11 +3,11 @@
 """
 
 
-from pyof.v0x04.common.action import ActionOutput
-from pyof.v0x04.controller2switch.packet_out import PacketOut
-from pyof.foundation.network_types import Ethernet
 from kytos.core import KytosEvent, log
 from napps.amlight.sdntrace import settings
+from pyof.foundation.network_types import Ethernet
+from pyof.v0x04.common.action import ActionOutput
+from pyof.v0x04.controller2switch.packet_out import PacketOut
 
 
 def packet_in(event, packet_in_msg):

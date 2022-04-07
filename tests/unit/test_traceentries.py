@@ -2,7 +2,8 @@
     Test tracing.trace_entries
 """
 from unittest import TestCase
-from sdntrace.tracing.trace_entries import TraceEntries
+
+from napps.amlight.sdntrace.tracing.trace_entries import TraceEntries
 
 
 class TestDpid(TestCase):
