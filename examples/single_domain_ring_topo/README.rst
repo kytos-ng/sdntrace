@@ -2,7 +2,7 @@ Kytos SDNTrace Napp
 
 How to try the sdntrace napp?
 
-1 - Install Python3.6+, create an venv, download Kytos, and install mininet using the tutorial below:
+1 - Install Python3.9, create an venv, download Kytos, and install mininet using the tutorial below:
 
   https://tutorials.kytos.io/napps/development_environment_setup/
 
@@ -13,7 +13,7 @@ How to try the sdntrace napp?
 
 3 - Start Mininet using the topology provided:
 
-  sudo python3.6 loop_topology_mininet.py
+  sudo python3.9 loop_topology_mininet.py
 
 4 - Depending of the pre-built test you want to use, use one of the following Bash scripts:
 
