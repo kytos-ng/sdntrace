@@ -178,10 +178,10 @@ class CITest(TestCommand):
 
     def run(self):
         """Run unit tests with coverage, doc tests and linter."""
-        coverage_cmd = f"python3.6 setup.py coverage {0}".format(
+        coverage_cmd = f"python3.9 setup.py coverage {0}".format(
             self.get_args()
         )
-        lint_cmd = "python3.6 setup.py lint"
+        lint_cmd = "python3.9 setup.py lint"
         cmd = f"{0} && {1}".format(coverage_cmd, lint_cmd)
         check_call(cmd, shell=True)
 
@@ -306,7 +306,7 @@ def symlink_if_different(path, target):
 setup(name=f'{NAPP_USERNAME}_{NAPP_NAME}',
       version=NAPP_VERSION,
       description='An OpenFlow Path Trace for the Kytos SDN controller',
-      url=f'http://github.com/amlight/{NAPP_NAME}',
+      url=f'http://github.com/kytos-ng/sdntrace',
       author='Jeronimo Bezerra',
       author_email='jab@amlight.net',
       license='MIT',
@@ -335,6 +335,6 @@ setup(name=f'{NAPP_USERNAME}_{NAPP_NAME}',
       classifiers=[
           'License :: OSI Approved :: MIT License',
           'Operating System :: POSIX :: Linux',
-          'Programming Language :: Python :: 3.6',
+          'Programming Language :: Python :: 3.9',
           'Topic :: System :: Networking',
       ])
