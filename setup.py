@@ -283,6 +283,7 @@ setup(name=f'{NAPP_USERNAME}_{NAPP_NAME}',
       install_requires=read_requirements(),
       setup_requires=['pytest-runner'],
       tests_require=['pytest'],
+      packages=[],
       extras_require={
           'dev': [
               'coverage',
