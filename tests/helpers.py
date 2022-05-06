@@ -17,10 +17,6 @@ def get_mocked_requests(_):
     """Mock requests.get."""
     return MockResponse(
         {
-            "links": {
-                "abc": {"active": False, "enabled": True},
-                "def": {"active": True, "enabled": True},
-            }
         },
         200,
     )
