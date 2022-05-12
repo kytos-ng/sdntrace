@@ -2,7 +2,7 @@
 from unittest import TestCase
 from unittest.mock import patch
 
-from napps.amlight.sdntrace.tests.helpers import get_controller_mock
+from kytos.lib.helpers import (get_controller_mock)
 
 
 # pylint: disable=too-many-public-methods, too-many-lines
@@ -23,7 +23,6 @@ class TestMain(TestCase):
         patch("kytos.core.helpers.run_on_thread", lambda x: x).start()
         # pylint: disable=import-outside-toplevel
         from napps.amlight.sdntrace.main import Main
-
         self.napp = Main(get_controller_mock())
 
     @staticmethod
@@ -78,5 +77,4 @@ class TestMain(TestCase):
                 "/api/amlight/sdntrace/settings/",),
         ]
         urls = self.get_napp_urls(self.napp)
-        print(urls)
         self.assertEqual(len(expected_urls), len(urls))
