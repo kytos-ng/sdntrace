@@ -313,7 +313,7 @@ setup(name=f'{NAPP_USERNAME}_{NAPP_NAME}',
       install_requires=read_requirements() + ["setuptools >= 59.6.0"],
       packages=[],
       setup_requires=['pytest-runner'],
-      tests_require=["pytest"],
+      tests_require=["pytest==7.0.0"],
       extras_require={
           'dev': [
               'coverage',
