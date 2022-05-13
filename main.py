@@ -23,13 +23,13 @@ At this moment, OpenFlow 1.0 and 1.3 are supported.
 
 
 from flask import jsonify, request
-from kytos.core import KytosNApp, log, rest
-from kytos.core.helpers import listen_to
 from napps.amlight.sdntrace import settings
+from napps.amlight.sdntrace.backends.of_parser import process_packet_in
 from napps.amlight.sdntrace.shared.switches import Switches
 from napps.amlight.sdntrace.tracing.trace_manager import TraceManager
-from napps.amlight.sdntrace.backends.of_parser import process_packet_in
 
+from kytos.core import KytosNApp, log, rest
+from kytos.core.helpers import listen_to
 
 VERSION = '0.3'
 
@@ -47,7 +47,7 @@ class Main(KytosNApp):
 
     def setup(self):
         """ Default Kytos/Napps setup call. """
-        log.info("Starting Kytos SDNTrace App version %s!" % VERSION)
+        log.info("Starting Kytos SDNTrace App version %s!", VERSION)
 
         # Create list of switches
         self.switches = Switches(self.controller.switches)  # noqa: E501  pylint: disable=attribute-defined-outside-init
@@ -71,11 +71,9 @@ class Main(KytosNApp):
 
     def execute(self):
         """ Kytos Napp execute method """
-        pass
 
     def shutdown(self):
         """ Kytos Napp shutdown method"""
-        pass
 
     @rest('/trace', methods=['PUT'])
     def run_trace(self):
@@ -121,7 +119,7 @@ class Main(KytosNApp):
         Return:
             SETTINGS in JSON format
         """
-        settings_dict = dict()
+        settings_dict = {}
         settings_dict['color_field'] = settings.COLOR_FIELD
         settings_dict['color_value'] = settings.COLOR_VALUE
         settings_dict['trace_interval'] = settings.TRACE_INTERVAL
