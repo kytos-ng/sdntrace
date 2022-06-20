@@ -206,7 +206,7 @@ def _get_node_color_from_dpid(dpid):
     for switch in Switches().get_switches():
         if dpid == switch.dpid:
             return switch, Colors().get_switch_color(switch.dpid)
-    return 0
+    return 0, 0
 
 
 def _get_vlan_from_pkt(data):
