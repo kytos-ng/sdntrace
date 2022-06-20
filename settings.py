@@ -4,7 +4,7 @@
 
 # Default field used to define color
 # It will be updated by shared.colors.Colors()
-COLOR_FIELD = 'dl_src'
+COLOR_FIELD = "dl_src"
 COLOR_VALUE = "ee:ee:ee:ee:ee:"
 
 # Interval between queries to the request_queue
@@ -20,4 +20,4 @@ OFPP_TABLE_13 = 4294967289
 PARALLEL_TRACES = 10
 
 # URL for coloring app
-COLORS_URL = 'http://localhost:8181/api/amlight/coloring/colors'
+COLORS_URL = "http://localhost:8181/api/amlight/coloring/colors"

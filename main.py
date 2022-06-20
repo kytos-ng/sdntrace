@@ -31,7 +31,7 @@ from napps.amlight.sdntrace.tracing.trace_manager import TraceManager
 from kytos.core import KytosNApp, log, rest
 from kytos.core.helpers import listen_to
 
-VERSION = '0.3'
+VERSION = "0.3"
 
 
 class Main(KytosNApp):
@@ -46,18 +46,30 @@ class Main(KytosNApp):
     """
 
     def setup(self):
-        """ Default Kytos/Napps setup call. """
+        """Default Kytos/Napps setup call."""
         log.info("Starting Kytos SDNTrace App version %s!", VERSION)
 
         # Create list of switches
-        self.switches = Switches(self.controller.switches)  # noqa: E501  pylint: disable=attribute-defined-outside-init
+        self.switches = Switches(
+            self.controller.switches
+        )  # noqa: E501  pylint: disable=attribute-defined-outside-init
 
         # Instantiate TraceManager
         self.tracing = TraceManager(self.controller)  # pylint: disable=W0201
 
-    @listen_to('kytos/of_core.v0x0[14].messages.in.ofpt_packet_in')
+    def execute(self):
+        """Kytos Napp execute method"""
+
+    def shutdown(self):
+        """Execute when your napp is unloaded.
+
+        If you have some cleanup procedure, insert it here.
+        """
+        self.tracing.stop_traces()
+
+    @listen_to("kytos/of_core.v0x0[14].messages.in.ofpt_packet_in")
     def handle_packet_in(self, event):
-        """ Receives OpenFlow PacketIn msgs and search from trace packets.
+        """Receives OpenFlow PacketIn msgs and search from trace packets.
         If process_packet_in returns 0,0,0, it means it is not a probe
         packet. Otherwise, store the msg for later use by Tracers.
 
@@ -66,45 +78,38 @@ class Main(KytosNApp):
         """
         ethernet, in_port, switch = process_packet_in(event)
         if not isinstance(ethernet, int):
-            self.tracing.queue_probe_packet(event, ethernet,
-                                            in_port, switch)
+            self.tracing.queue_probe_packet(event, ethernet, in_port, switch)
 
-    def execute(self):
-        """ Kytos Napp execute method """
-
-    def shutdown(self):
-        """ Kytos Napp shutdown method"""
-
-    @rest('/trace', methods=['PUT'])
+    @rest("/trace", methods=["PUT"])
     def run_trace(self):
-        """ Submit a trace request
+        """Submit a trace request
 
         Return:
             trace ID in JSON format
         """
         return jsonify(self.tracing.rest_new_trace(request.get_json()))
 
-    @rest('/trace', methods=['GET'])
+    @rest("/trace", methods=["GET"])
     def get_results(self):
-        """ List all traces performed so far.
+        """List all traces performed so far.
 
         Return:
             rest_list_results in JSON format
         """
         return jsonify(self.tracing.rest_list_results())
 
-    @rest('/trace/<trace_id>', methods=['GET'])
+    @rest("/trace/<trace_id>", methods=["GET"])
     def get_result(self, trace_id):
-        """ List All Traces performed since the Napp loaded
+        """List All Traces performed since the Napp loaded
 
         Return:
             rest_get_result in JSON format
         """
         return jsonify(self.tracing.rest_get_result(trace_id))
 
-    @rest('/stats', methods=['GET'])
+    @rest("/stats", methods=["GET"])
     def get_stats(self):
-        """ Get statistics
+        """Get statistics
 
         Return:
             rest_list_stats in JSON format
@@ -112,17 +117,17 @@ class Main(KytosNApp):
         return jsonify(self.tracing.rest_list_stats())
 
     @staticmethod
-    @rest('/settings', methods=['GET'])
+    @rest("/settings", methods=["GET"])
     def list_settings():
-        """ List the SDNTrace settings
+        """List the SDNTrace settings
 
         Return:
             SETTINGS in JSON format
         """
         settings_dict = {}
-        settings_dict['color_field'] = settings.COLOR_FIELD
-        settings_dict['color_value'] = settings.COLOR_VALUE
-        settings_dict['trace_interval'] = settings.TRACE_INTERVAL
-        settings_dict['parallel_traces'] = settings.PARALLEL_TRACES
-        settings_dict['sdntrace_version'] = VERSION
+        settings_dict["color_field"] = settings.COLOR_FIELD
+        settings_dict["color_value"] = settings.COLOR_VALUE
+        settings_dict["trace_interval"] = settings.TRACE_INTERVAL
+        settings_dict["parallel_traces"] = settings.PARALLEL_TRACES
+        settings_dict["sdntrace_version"] = VERSION
         return jsonify(settings_dict)
