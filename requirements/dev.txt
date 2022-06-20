@@ -4,6 +4,8 @@
 #
 #    pip-compile --output-file=requirements/dev.txt requirements/dev.in
 #
+-e git+https://github.com/kytos-ng/coloring.git#egg=amlight-coloring
+    # via -r requirements/dev.in
 -e .
     # via -r requirements/dev.in
 -e git+https://github.com/kytos-ng/kytos.git#egg=kytos
@@ -30,12 +32,14 @@ blinker==1.4
     #   kytos
 certifi==2021.10.8
     # via
+    #   amlight-coloring
     #   amlight-sdntrace
     #   elastic-apm
     #   kytos
     #   requests
 charset-normalizer==2.0.10
     # via
+    #   amlight-coloring
     #   amlight-sdntrace
     #   requests
 click==8.0.3
@@ -78,6 +82,7 @@ flask-socketio==4.2.1
     # via kytos
 idna==3.3
     # via
+    #   amlight-coloring
     #   amlight-sdntrace
     #   requests
 iniconfig==1.1.1
@@ -200,7 +205,9 @@ python-socketio==4.5.1
     #   flask-socketio
     #   kytos
 requests==2.27.0
-    # via amlight-sdntrace
+    # via
+    #   amlight-coloring
+    #   amlight-sdntrace
 six==1.16.0
     # via
     #   flask-cors
@@ -237,6 +244,7 @@ typing-extensions==4.0.1
     #   pylint
 urllib3==1.26.7
     # via
+    #   amlight-coloring
     #   amlight-sdntrace
     #   elastic-apm
     #   kytos
