@@ -5,6 +5,7 @@
 #
 -e git+https://github.com/kytos-ng/python-openflow.git#egg=python-openflow
 -e git+https://github.com/kytos-ng/kytos.git#egg=kytos
+-e git+https://github.com/kytos-ng/of_core.git#egg=kytos-of_core # coloring dependency
 -e git+https://github.com/kytos-ng/coloring.git#egg=amlight-coloring
 -e .[dev]
 black==22.3.0

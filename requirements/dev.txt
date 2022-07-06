@@ -4,6 +4,8 @@
 #
 #    pip-compile --output-file=requirements/dev.txt requirements/dev.in
 #
+-e git+https://github.com/kytos-ng/of_core.git#egg=kytos-of_core
+    # via -r requirements/dev.in
 -e git+https://github.com/kytos-ng/coloring.git#egg=amlight-coloring
     # via -r requirements/dev.in
 -e .
