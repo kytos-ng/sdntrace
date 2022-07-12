@@ -103,7 +103,7 @@ class Test(TestCommand):
             check_call(cmd, shell=True)
         except CalledProcessError as exc:
             print(exc)
-            print('Unit tests failed. Fix the errors above and try again.')
+            print("Unit tests failed. Fix the errors above and try again.")
             sys.exit(-1)
 
 
@@ -119,7 +119,7 @@ class TestCoverage(Test):
             check_call(cmd, shell=True)
         except CalledProcessError as exc:
             print(exc)
-            print('Coverage tests failed. Fix the errors above and try again.')
+            print("Coverage tests failed. Fix the errors above and try again.")
             sys.exit(-1)
 
 
@@ -257,37 +257,39 @@ def symlink_if_different(path, target):
         path.symlink_to(target)
 
 
-setup(name=f'{NAPP_USERNAME}_{NAPP_NAME}',
-      version=NAPP_VERSION,
-      description='An OpenFlow Path Trace for the Kytos SDN controller',
-      url='http://github.com/kytos-ng/sdntrace',
-      author='Jeronimo Bezerra',
-      author_email='jab@amlight.net',
-      license='MIT',
-      install_requires=read_requirements() + ["setuptools >= 59.6.0"],
-      packages=[],
-      extras_require={
-          'dev': [
-              'pytest==7.0.0',
-              'pytest-cov==3.0.0',
-              "pip-tools",
-              'yala',
-              'tox',
-          ],
-      },
-      cmdclass={
-          'clean': Cleaner,
-          'coverage': TestCoverage,
-          'develop': DevelopMode,
-          'install': InstallMode,
-          'lint': Linter,
-          'egg_info': EggInfo,
-          'test': Test,
-      },
-      zip_safe=False,
-      classifiers=[
-          'License :: OSI Approved :: MIT License',
-          'Operating System :: POSIX :: Linux',
-          'Programming Language :: Python :: 3.9',
-          'Topic :: System :: Networking',
-      ])
+setup(
+    name=f"{NAPP_USERNAME}_{NAPP_NAME}",
+    version=NAPP_VERSION,
+    description="An OpenFlow Path Trace for the Kytos SDN controller",
+    url="http://github.com/kytos-ng/sdntrace",
+    author="Jeronimo Bezerra",
+    author_email="jab@amlight.net",
+    license="MIT",
+    install_requires=read_requirements() + ["setuptools >= 59.6.0"],
+    packages=[],
+    extras_require={
+        "dev": [
+            "pytest==7.0.0",
+            "pytest-cov==3.0.0",
+            "pip-tools",
+            "yala",
+            "tox",
+        ],
+    },
+    cmdclass={
+        "clean": Cleaner,
+        "coverage": TestCoverage,
+        "develop": DevelopMode,
+        "install": InstallMode,
+        "lint": Linter,
+        "egg_info": EggInfo,
+        "test": Test,
+    },
+    zip_safe=False,
+    classifiers=[
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python :: 3.9",
+        "Topic :: System :: Networking",
+    ],
+)

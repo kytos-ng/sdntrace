@@ -44,7 +44,3 @@ class Switches(metaclass=Singleton):
     def get_switches(self):
         """Return all switches """
         return self._switches.values()
-
-    def set_switches(self, switches):
-        """Set all switches """
-        self._switches = switches
