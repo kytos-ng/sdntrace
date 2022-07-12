@@ -58,7 +58,7 @@ class TestTraceManager(TestCase):
 
         controller.switches = {dpid_a: mock_switch_a, dpid_b: mock_switch_b}
 
-        Switches().set_switches(controller.switches)
+        Switches()._switches = controller.switches
 
     def test_is_entry_invalid(self):
         """Test if the entry request does not have a valid switch."""
@@ -104,7 +104,10 @@ class TestTraceManager(TestCase):
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     def test_is_entry_valid(self, mock_colors):
         """Test if the entry request is valid."""
-        mock_colors.return_value = "ee:ee:ee:ee:ee:01"
+        mock_colors.return_value = {
+            "color_field": "dl_src",
+            "color_value": "ee:ee:ee:ee:ee:01",
+        }
 
         eth = {"dl_vlan": 100}
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
@@ -116,7 +119,10 @@ class TestTraceManager(TestCase):
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     def test_new_trace(self, mock_colors):
         """Test trace manager new trace creation."""
-        mock_colors.return_value = "ee:ee:ee:ee:ee:01"
+        mock_colors.return_value = {
+            "color_field": "dl_src",
+            "color_value": "ee:ee:ee:ee:ee:01",
+        }
 
         eth = {"dl_vlan": 100}
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
@@ -148,7 +154,10 @@ class TestTraceManager(TestCase):
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.send_trace_probe")
     def test_trace_pending(self, mock_send_probe, mock_colors):
         """Test trace manager tracing request."""
-        mock_colors.return_value = "ee:ee:ee:ee:ee:01"
+        mock_colors.return_value = {
+            "color_field": "dl_src",
+            "color_value": "ee:ee:ee:ee:ee:01",
+        }
         mock_send_probe.return_value = {
             "dpid": "00:00:00:00:00:00:00:01",
             "port": 1,
@@ -180,7 +189,10 @@ class TestTraceManager(TestCase):
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.send_trace_probe")
     def test_trace_in_process(self, mock_send_probe, mock_colors):
         """Test trace manager tracing request and processing."""
-        mock_colors.return_value = "ee:ee:ee:ee:ee:01"
+        mock_colors.return_value = {
+            "color_field": "dl_src",
+            "color_value": "ee:ee:ee:ee:ee:01",
+        }
         mock_send_probe.return_value = {
             "dpid": "00:00:00:00:00:00:00:01",
             "port": 1,
@@ -212,7 +224,10 @@ class TestTraceManager(TestCase):
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.tracepath_loop")
     def test_get_result(self, mock_trace_loop, mock_send_probe, mock_colors):
         """Test tracemanager tracing request and resultS."""
-        mock_colors.return_value = "ee:ee:ee:ee:ee:01"
+        mock_colors.return_value = {
+            "color_field": "dl_src",
+            "color_value": "ee:ee:ee:ee:ee:01",
+        }
         mock_send_probe.return_value = {
             "dpid": "00:00:00:00:00:00:00:01",
             "port": 1,
@@ -268,7 +283,10 @@ class TestTraceManager(TestCase):
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     def test_duplicated_request(self, mock_colors):
         """Test trace manager new trace creation."""
-        mock_colors.return_value = "ee:ee:ee:ee:ee:01"
+        mock_colors.return_value = {
+            "color_field": "dl_src",
+            "color_value": "ee:ee:ee:ee:ee:01",
+        }
 
         eth = {"dl_vlan": 100}
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
@@ -287,7 +305,10 @@ class TestTraceManager(TestCase):
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     def test_avoid_duplicated_request(self, mock_colors):
         """Test trace manager new trace creation."""
-        mock_colors.return_value = "ee:ee:ee:ee:ee:01"
+        mock_colors.return_value = {
+            "color_field": "dl_src",
+            "color_value": "ee:ee:ee:ee:ee:01",
+        }
 
         eth = {"dl_vlan": 100}
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
@@ -364,8 +385,11 @@ class TestTraceManagerTheadTest(TestCase):
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.send_trace_probe")
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.tracepath_loop")
     def test_run_traces(self, mock_trace_loop, mock_send_probe, mock_colors):
-        """Test tracemanager tracing request and resultS."""
-        mock_colors.return_value = "ee:ee:ee:ee:ee:01"
+        """Test tracemanager tracing request and results."""
+        mock_colors.return_value = {
+            "color_field": "dl_src",
+            "color_value": "ee:ee:ee:ee:ee:01",
+        }
         mock_send_probe.return_value = {
             "dpid": "00:00:00:00:00:00:00:01",
             "port": 1,
