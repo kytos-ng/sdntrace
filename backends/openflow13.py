@@ -8,6 +8,7 @@ from napps.amlight.sdntrace import settings
 from pyof.foundation.network_types import Ethernet
 from pyof.v0x04.common.action import ActionOutput
 from pyof.v0x04.controller2switch.packet_out import PacketOut
+from napps.kytos.of_core.msg_prios import of_msg_prio
 
 
 def packet_in(event, packet_in_msg):
@@ -56,10 +57,11 @@ def send_packet_out(controller, switch, port, data):
     packet_out.in_port = port
     packet_out.data = bytes(data)
 
-    event_out = KytosEvent()
-    event_out.name = 'kytos/of_lldp.messages.out.ofpt_packet_out'
-    event_out.content = {'destination': switch.connection,
-                         'message': packet_out}
-
+    event_out = KytosEvent(
+        name='kytos/of_lldp.messages.out.ofpt_packet_out',
+        priority=of_msg_prio(packet_out.header.message_type.value),
+        content={'destination': switch.connection,
+                 'message': packet_out}
+    )
     log.debug('PacketOut %s sent' % event_out.content)
     controller.buffers.msg_out.put(event_out)
