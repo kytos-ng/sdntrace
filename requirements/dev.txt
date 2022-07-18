@@ -12,6 +12,8 @@
     # via
     #   -r requirements/dev.in
     #   kytos
+-e git+https://github.com/kytos-ng/of_core.git#egg=kytos-of_core
+    # via -r requirements/dev.in
 astroid==2.9.2
     # via pylint
 attrs==21.4.0

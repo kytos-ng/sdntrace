@@ -10,6 +10,7 @@ Added
 
 Changed
 =======
+- KytosEvent PacketOut is now being prioritized on ``msg_out`` for OpenFlow1.3
 
 Deprecated
 ==========

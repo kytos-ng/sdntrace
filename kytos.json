@@ -4,7 +4,7 @@
   "name": "sdntrace",
   "description": "An OpenFlow Data Path Tracing",
   "version": "2022.1.0",
-  "napp_dependencies": ["amlight/coloring"],
+  "napp_dependencies": ["amlight/coloring", "kytos/of_core"],
   "license": "GPL3.0",
   "tags": ["experimental", "coloring"],
   "url": "http://github.com/amlight/sdntrace_kytos/"
