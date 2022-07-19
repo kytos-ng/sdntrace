@@ -58,7 +58,9 @@ class TestTraceManager(TestCase):
 
         controller.switches = {dpid_a: mock_switch_a, dpid_b: mock_switch_b}
 
-        Switches()._switches = {dpid_a: mock_switch_a, dpid_b: mock_switch_b}
+        # Disable pylint message to use the Switch Singleton
+        # pylint: disable=no-value-for-parameter
+        Switches()._switches = controller.switches
 
     def test_is_entry_invalid(self):
         """Test if the entry request does not have a valid switch."""
