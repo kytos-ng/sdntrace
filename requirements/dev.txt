@@ -149,7 +149,7 @@ pickleshare==0.7.5
     # via
     #   ipython
     #   kytos
-pip-tools==6.4.0
+pip-tools==6.6.0
     # via amlight-sdntrace
 platformdirs==2.4.0
     # via
@@ -223,7 +223,7 @@ toml==0.10.2
     # via
     #   pylint
     #   tox
-tomli==1.2.3
+tomli==2.0.1
     # via
     #   black
     #   coverage
