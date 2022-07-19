@@ -1,6 +1,6 @@
 """ Tests for /backends/of_parser.py """
 from unittest import TestCase
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from napps.amlight.sdntrace.backends.of_parser import (
     process_packet_in,

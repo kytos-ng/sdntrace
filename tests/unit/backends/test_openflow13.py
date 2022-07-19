@@ -83,6 +83,7 @@ class TestOpenflow13(TestCase):
             settings.OFPP_TABLE_13,
         )
 
+    # pylint: disable=no-self-use
     @patch("napps.amlight.sdntrace.backends.openflow13.of_msg_prio")
     def test_send_packet_out(self, mock_of_msg_prio) -> None:
         """Test send_packet_out."""
