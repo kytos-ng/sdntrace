@@ -15,26 +15,26 @@ from setuptools.command.develop import develop
 from setuptools.command.egg_info import egg_info
 from setuptools.command.install import install
 
-if 'bdist_wheel' in sys.argv:
+if "bdist_wheel" in sys.argv:
     raise RuntimeError("This setup.py does not support wheels")
 
 # Paths setup with virtualenv detection
-BASE_ENV = Path(os.environ.get('VIRTUAL_ENV', '/'))
+BASE_ENV = Path(os.environ.get("VIRTUAL_ENV", "/"))
 
-NAPP_NAME = 'sdntrace'
-NAPP_USERNAME = 'amlight'
-NAPP_VERSION = '2022.1.0'
+NAPP_NAME = "sdntrace"
+NAPP_USERNAME = "amlight"
+NAPP_VERSION = "2022.1.0"
 
 # Kytos var folder
-VAR_PATH = BASE_ENV / 'var' / 'lib' / 'kytos'
+VAR_PATH = BASE_ENV / "var" / "lib" / "kytos"
 # Path for enabled NApps
-ENABLED_PATH = VAR_PATH / 'napps'
+ENABLED_PATH = VAR_PATH / "napps"
 # Path to install NApps
-INSTALLED_PATH = VAR_PATH / 'napps' / '.installed'
-CURRENT_DIR = Path('.').resolve()
+INSTALLED_PATH = VAR_PATH / "napps" / ".installed"
+CURRENT_DIR = Path(".").resolve()
 
 # NApps enabled by default
-ENABLED_NAPPS = [('amlight', 'coloring')]
+ENABLED_NAPPS = [("amlight", "coloring")]
 
 
 class SimpleCommand(Command):
@@ -82,13 +82,13 @@ class TestCommand(Command):
 class Cleaner(SimpleCommand):
     """Custom clean command to tidy up the project root."""
 
-    description = 'clean build, dist, pyc and egg from package and docs'
+    description = "clean build, dist, pyc and egg from package and docs"
 
     def run(self):
         """Clean build, dist, pyc and egg from package and docs."""
-        call('rm -vrf ./build ./dist ./*.egg-info', shell=True)
-        call('find . -name __pycache__ -type d | xargs rm -rf', shell=True)
-        call('make -C docs/ clean', shell=True)
+        call("rm -vrf ./build ./dist ./*.egg-info", shell=True)
+        call("find . -name __pycache__ -type d | xargs rm -rf", shell=True)
+        call("make -C docs/ clean", shell=True)
 
 
 class Test(TestCommand):
@@ -103,7 +103,7 @@ class Test(TestCommand):
             check_call(cmd, shell=True)
         except CalledProcessError as exc:
             print(exc)
-            print('Unit tests failed. Fix the errors above and try again.')
+            print("Unit tests failed. Fix the errors above and try again.")
             sys.exit(-1)
 
 
@@ -119,24 +119,24 @@ class TestCoverage(Test):
             check_call(cmd, shell=True)
         except CalledProcessError as exc:
             print(exc)
-            print('Coverage tests failed. Fix the errors above and try again.')
+            print("Coverage tests failed. Fix the errors above and try again.")
             sys.exit(-1)
 
 
 class Linter(SimpleCommand):
     """Code linters."""
 
-    description = 'lint Python source code'
+    description = "lint Python source code"
 
     def run(self):
         """Run yala."""
-        print('Yala is running. It may take several seconds...')
+        print("Yala is running. It may take several seconds...")
         try:
             cmd = "yala *.py tests"
             check_call(cmd, shell=True)
-            print('No linter error found.')
+            print("No linter error found.")
         except CalledProcessError:
-            print('Linter check failed. Fix the error(s) above and try again.')
+            print("Linter check failed. Fix the error(s) above and try again.")
             sys.exit(-1)
 
 
@@ -198,7 +198,7 @@ class DevelopMode(develop):
     created on the system aiming the current source code.
     """
 
-    description = 'Install NApps in development mode'
+    description = "Install NApps in development mode"
 
     def run(self):
         """Install the package in a developer mode."""
@@ -229,8 +229,8 @@ class DevelopMode(develop):
     @staticmethod
     def _create_file_symlinks():
         """Symlink to required files."""
-        src = ENABLED_PATH / '__init__.py'
-        dst = CURRENT_DIR / '__init__.py'
+        src = ENABLED_PATH / "__init__.py"
+        dst = CURRENT_DIR / "__init__.py"
         symlink_if_different(src, dst)
 
 
@@ -257,37 +257,39 @@ def symlink_if_different(path, target):
         path.symlink_to(target)
 
 
-setup(name=f'{NAPP_USERNAME}_{NAPP_NAME}',
-      version=NAPP_VERSION,
-      description='An OpenFlow Path Trace for the Kytos SDN controller',
-      url='http://github.com/kytos-ng/sdntrace',
-      author='Jeronimo Bezerra',
-      author_email='jab@amlight.net',
-      license='MIT',
-      install_requires=read_requirements() + ["setuptools >= 59.6.0"],
-      packages=[],
-      extras_require={
-          'dev': [
-              'pytest==7.0.0',
-              'pytest-cov==3.0.0',
-              "pip-tools",
-              'yala',
-              'tox',
-          ],
-      },
-      cmdclass={
-          'clean': Cleaner,
-          'coverage': TestCoverage,
-          'develop': DevelopMode,
-          'install': InstallMode,
-          'lint': Linter,
-          'egg_info': EggInfo,
-          'test': Test,
-      },
-      zip_safe=False,
-      classifiers=[
-          'License :: OSI Approved :: MIT License',
-          'Operating System :: POSIX :: Linux',
-          'Programming Language :: Python :: 3.9',
-          'Topic :: System :: Networking',
-      ])
+setup(
+    name=f"{NAPP_USERNAME}_{NAPP_NAME}",
+    version=NAPP_VERSION,
+    description="An OpenFlow Path Trace for the Kytos SDN controller",
+    url="http://github.com/kytos-ng/sdntrace",
+    author="Jeronimo Bezerra",
+    author_email="jab@amlight.net",
+    license="MIT",
+    install_requires=read_requirements() + ["setuptools >= 59.6.0"],
+    packages=[],
+    extras_require={
+        "dev": [
+            "pytest==7.0.0",
+            "pytest-cov==3.0.0",
+            "pip-tools",
+            "yala",
+            "tox",
+        ],
+    },
+    cmdclass={
+        "clean": Cleaner,
+        "coverage": TestCoverage,
+        "develop": DevelopMode,
+        "install": InstallMode,
+        "lint": Linter,
+        "egg_info": EggInfo,
+        "test": Test,
+    },
+    zip_safe=False,
+    classifiers=[
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python :: 3.9",
+        "Topic :: System :: Networking",
+    ],
+)

@@ -1,17 +1,17 @@
-""" Tests for /backends/openflow13.py """
+""" Tests for /backends/openflow10.py """
 from unittest import TestCase
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from napps.amlight.sdntrace import settings
-from napps.amlight.sdntrace.backends.openflow13 import (
+from napps.amlight.sdntrace.backends.openflow10 import (
     packet_in,
     send_packet_out,
 )
 
 
 # pylint: disable=too-many-public-methods, too-many-lines
-class TestOpenflow13(TestCase):
-    """Unit tests for backends.openflow13 functions"""
+class TestOpenflow10(TestCase):
+    """Unit tests for /backends/openflow10.py functions."""
 
     def test_packet_in_with_color(self):
         """Test packet in with color ee:ee:ee:ee:ee:01."""
@@ -25,7 +25,6 @@ class TestOpenflow13(TestCase):
 
         event = MagicMock()
         event.source.switch = "ee:ee:ee:ee:ee:01"
-        event.message.in_port = 1
 
         ethernet, in_port, switch = packet_in(event, packet_in_msg)
 
@@ -80,14 +79,5 @@ class TestOpenflow13(TestCase):
         self.assertEqual(called_event.content["message"].data, data)
         self.assertEqual(
             called_event.content["message"].actions[0].port,
-            settings.OFPP_TABLE_13,
+            settings.OFPP_TABLE,
         )
-
-    # pylint: disable=no-self-use
-    @patch("napps.amlight.sdntrace.backends.openflow13.of_msg_prio")
-    def test_send_packet_out(self, mock_of_msg_prio) -> None:
-        """Test send_packet_out."""
-        controller = MagicMock()
-        send_packet_out(controller, MagicMock(), MagicMock(), MagicMock())
-        assert controller.buffers.msg_out.put.call_count == 1
-        assert mock_of_msg_prio.call_count == 1

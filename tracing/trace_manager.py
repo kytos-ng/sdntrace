@@ -44,8 +44,16 @@ class TraceManager(object):
         # PacketIn queue with Probes
         self.trace_pkt_in = []
 
+        self._is_tracing_running = True
+
         # Thread to start traces
         new_thread(self._run_traces, (settings.TRACE_INTERVAL,))
+
+    def stop_traces(self):
+        self._is_tracing_running = False
+
+    def is_tracing_running(self):
+        return self._is_tracing_running
 
     def _run_traces(self, trace_interval):
         """ Thread that will keep reading the self._request_queue
@@ -54,7 +62,7 @@ class TraceManager(object):
         Args:
             trace_interval = sleeping time
         """
-        while True:
+        while self.is_tracing_running():
             if self.number_pending_requests() > 0:
                 try:
                     new_request_ids = []
@@ -85,6 +93,7 @@ class TraceManager(object):
         log.info("Creating thread to trace request id %s..." % trace_id)
         tracer = TracePath(self, trace_id, trace_entries)
         tracer.tracepath()
+
         del self._running_traces[trace_id]
 
     def add_result(self, trace_id, result):
@@ -132,7 +141,8 @@ class TraceManager(object):
         if isinstance(init_switch, bool):
             return "Unknown Switch"
         color = Colors().get_switch_color(init_switch.dpid)
-        if len(color) is 0:
+
+        if len(color) == 0:
             return "Switch not Colored"
 
         # TODO: get Coloring API to confirm color_field
