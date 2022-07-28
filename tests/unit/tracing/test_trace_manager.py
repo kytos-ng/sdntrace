@@ -58,9 +58,7 @@ class TestTraceManager(TestCase):
 
         controller.switches = {dpid_a: mock_switch_a, dpid_b: mock_switch_b}
 
-        # Disable pylint message to use the Switch Singleton
-        # pylint: disable=no-value-for-parameter
-        Switches()._switches = controller.switches
+        Switches(MagicMock())._switches = controller.switches
 
     def test_is_entry_invalid(self):
         """Test if the entry request does not have a valid switch."""
@@ -187,39 +185,13 @@ class TestTraceManager(TestCase):
         result = self.trace_manager.get_result("1234")
         self.assertEqual(result, {"msg": "unknown trace id"})
 
-    @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
-    @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.send_trace_probe")
-    def test_trace_in_process(self, mock_send_probe, mock_colors):
-        """Test trace manager tracing request and processing."""
-        mock_colors.return_value = {
-            "color_field": "dl_src",
-            "color_value": "ee:ee:ee:ee:ee:01",
-        }
-        mock_send_probe.return_value = {
-            "dpid": "00:00:00:00:00:00:00:01",
-            "port": 1,
-        }, ""
-
-        eth = {"dl_vlan": 100}
-        dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
-        switch = {"switch": dpid, "eth": eth}
-        entries = {"trace": switch}
-
-        trace_entries = self.trace_manager.is_entry_valid(entries)
-        self.assertIsInstance(trace_entries, TraceEntries)
-
-        trace_id = self.trace_manager.new_trace(trace_entries)
-        self.assertEqual(trace_id, 30001)
-
-        pending = self.trace_manager.number_pending_requests()
-        self.assertEqual(pending, 1)
-
-        while pending == 1:
-            result = self.trace_manager.get_result(trace_id)
-            pending = self.trace_manager.number_pending_requests()
-            time.sleep(0.1)
-
-        self.assertEqual(result, {"msg": "trace in process"})
+    def test_trace_in_process(self):
+        """Test trace manager in process."""
+        self.trace_manager._spawn_trace = MagicMock()
+        trace_id = 30001
+        self.trace_manager._running_traces[trace_id] = {}
+        result = self.trace_manager.get_result(trace_id)
+        assert result == {"msg": "trace in process"}
 
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.send_trace_probe")
