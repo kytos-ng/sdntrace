@@ -1,4 +1,4 @@
-|Tag| |License|
+|Tag| |License| |Build| |Coverage| |Quality|
 
 .. raw:: html
 
@@ -18,7 +18,7 @@ An OpenFlow Path Trace for Kytos SDN controller v0.3
 Requirements
 ============
 
-- `amlight/coloring <https://github.com/amlight/coloring>`_
+- `amlight/coloring <https://github.com/kytos-ng/coloring>`_
 
 Modus operandi
 ==============
@@ -73,18 +73,18 @@ Agarwal, K., Rozner, E., Dixon, C., & Carter, J. (2014, August). SDN traceroute:
 
 .. TAGs
 
-.. |License| image:: https://img.shields.io/github/license/amlight/sdntrace.svg
-   :target: https://github.com/amlight/sdntrace/blob/master/LICENSE
-.. |Build| image:: https://scrutinizer-ci.com/g/amlight/sdntrace/badges/build.png?b=master
+.. |License| image:: https://img.shields.io/github/license/kytos-ng/sdntrace.svg
+   :target: https://github.com/kytos-ng/sdntrace/blob/master/LICENSE
+.. |Build| image:: https://scrutinizer-ci.com/g/kytos-ng/sdntrace/badges/build.png?b=master
   :alt: Build status
-  :target: https://scrutinizer-ci.com/g/amlight/sdntrace/?branch=master
-.. |Coverage| image:: https://scrutinizer-ci.com/g/amlight/sdntrace/badges/coverage.png?b=master
+  :target: https://scrutinizer-ci.com/g/kytos-ng/sdntrace/?branch=master
+.. |Coverage| image:: https://scrutinizer-ci.com/g/kytos-ng/sdntrace/badges/coverage.png?b=master
   :alt: Code coverage
-  :target: https://scrutinizer-ci.com/g/amlight/sdntrace/?branch=master
-.. |Quality| image:: https://scrutinizer-ci.com/g/amlight/sdntrace/badges/quality-score.png?b=master
+  :target: https://scrutinizer-ci.com/g/kytos-ng/sdntrace/?branch=master
+.. |Quality| image:: https://scrutinizer-ci.com/g/kytos-ng/sdntrace/badges/quality-score.png?b=master
   :alt: Code-quality score
-  :target: https://scrutinizer-ci.com/g/amlight/sdntrace/?branch=master
+  :target: https://scrutinizer-ci.com/g/kytos-ng/sdntrace/?branch=master
 .. |Stable| image:: https://img.shields.io/badge/stability-stable-green.svg
-   :target: https://github.com/amlight/sdntrace
-.. |Tag| image:: https://img.shields.io/github/tag/amlight/sdntrace.svg
-   :target: https://github.com/amlight/sdntrace/tags
+   :target: https://github.com/kytos-ng/sdntrace
+.. |Tag| image:: https://img.shields.io/github/tag/kytos-ng/sdntrace.svg
+   :target: https://github.com/kytos-ng/sdntrace/tags
