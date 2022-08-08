@@ -14,7 +14,7 @@
 Overview
 ========
 
-``sdntrace`` traces OpenFlow paths in the data plane. This NApp can used by either network operators to troubleshoot data plane entries or other NApps that might need to make sure that a data plane plane path is traceable.
+``sdntrace`` traces OpenFlow paths in the data plane. This NApp can used by either network operators to troubleshoot data plane entries or other NApps that might need to make sure that a data plane path is traceable.
 
 Installing
 ==========
