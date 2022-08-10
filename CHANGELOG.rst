@@ -10,7 +10,6 @@ Added
 
 Changed
 =======
-- KytosEvent PacketOut is now being prioritized on ``msg_out`` for OpenFlow1.3
 
 Deprecated
 ==========
@@ -23,6 +22,17 @@ Fixed
 
 Security
 ========
+
+[2022.2.0] - 2022-08-08
+***********************
+
+Changed
+=======
+- KytosEvent PacketOut is now being prioritized on ``msg_out`` for OpenFlow1.3
+
+General Information
+===================
+- Increased unit test coverage to at least 85%
 
 [2022.1.0] - 2022-02-08
 ***********************

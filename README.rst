@@ -13,7 +13,19 @@
 
 Overview
 ========
-An OpenFlow Path Trace for Kytos SDN controller v0.3
+
+``sdntrace`` traces OpenFlow paths in the data plane. This NApp can used by either network operators to troubleshoot data plane entries or other NApps that might need to make sure that a data plane path is traceable.
+
+Installing
+==========
+
+To install this NApp, make sure to have the same venv activated as you have ``kytos`` installed on:
+
+.. code:: shell
+
+   $ git clone https://github.com/kytos-ng/sdntrace.git
+   $ cd sdntrace
+   $ python3 setup.py develop
 
 Requirements
 ============
