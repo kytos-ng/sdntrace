@@ -176,7 +176,7 @@ class TraceManager(object):
                 return {'msg': 'trace pending'}
             return {'msg': 'unknown trace id'}
 
-    def eet_results(self):
+    def get_results(self):
         """Used by external apps to get all trace results. Useful
         to see all requests and results
 
