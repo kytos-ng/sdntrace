@@ -36,11 +36,11 @@ class Switches(metaclass=Singleton):
             a kytos.core.switch.Switch() object
             False if not found
         """
-        for switch in self._switches.values():
+        for switch in self._switches.copy().values():
             if switch.dpid == dpid:
                 return self._switches[switch.dpid]
         return False
 
     def get_switches(self):
         """Return all switches """
-        return self._switches.values()
+        return self._switches.copy().values()

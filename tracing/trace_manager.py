@@ -66,7 +66,7 @@ class TraceManager(object):
             if self.number_pending_requests() > 0:
                 try:
                     new_request_ids = []
-                    for req_id in self._request_queue:
+                    for req_id in self._request_queue.copy():
                         if not self.limit_traces_reached():
                             entries = self._request_queue[req_id]
                             self._running_traces[req_id] = entries
@@ -115,7 +115,7 @@ class TraceManager(object):
             True: if exists a similar request
             False: otherwise
         """
-        for request in self._request_queue:
+        for request in self._request_queue.copy():
             if entries == self._request_queue[request]:
                 return True
         return False
@@ -176,7 +176,7 @@ class TraceManager(object):
                 return {'msg': 'trace pending'}
             return {'msg': 'unknown trace id'}
 
-    def get_results(self):
+    def eet_results(self):
         """Used by external apps to get all trace results. Useful
         to see all requests and results
 
