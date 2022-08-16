@@ -170,7 +170,7 @@ class TracePath(object):
     def clear_trace_pkt_in(self):
         """ Once the probe PacketIn was processed, delete it from queue """
 
-        for pkt_in_msg in self.trace_mgr.trace_pkt_in:
+        for pkt_in_msg in self.trace_mgr.trace_pkt_in[:]:
             msg = pkt_in_msg["msg"]
             if self.id == msg.request_id:
                 self.trace_mgr.trace_pkt_in.remove(pkt_in_msg)
