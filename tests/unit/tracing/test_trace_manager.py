@@ -92,8 +92,10 @@ class TestTraceManager(TestCase):
 
         self.assertEqual(entry, "Error: dpid not provided")
 
-    def test_is_entry_invalid_not_colored(self):
+    @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
+    def test_is_entry_invalid_not_colored(self, mock_colors):
         """Test if the entry request does not have a valid color."""
+        mock_colors.return_value = {}
         eth = {"dl_vlan": 100}
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
         switch = {"switch": dpid, "eth": eth}
