@@ -8,7 +8,7 @@ from napps.amlight.sdntrace.backends.of_parser import (
 )
 
 
-# pylint: disable=too-many-public-methods, too-many-lines, no-self-use
+# pylint: disable=too-many-public-methods, too-many-lines
 class TestOFParser(TestCase):
     """Unit tests for backends.of_parser functions"""
 
