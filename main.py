@@ -18,7 +18,7 @@ Steps:
 Dependencies:
     * - amlight/coloring Napp will color all switches
 
-At this moment, OpenFlow 1.0 and 1.3 are supported.
+At this moment, OpenFlow 1.3 is supported.
 """
 
 
