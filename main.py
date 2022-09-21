@@ -18,7 +18,7 @@ Steps:
 Dependencies:
     * - amlight/coloring Napp will color all switches
 
-At this moment, OpenFlow 1.0 and 1.3 are supported.
+At this moment, OpenFlow 1.3 is supported.
 """
 
 
@@ -67,7 +67,7 @@ class Main(KytosNApp):
         """
         self.tracing.stop_traces()
 
-    @listen_to("kytos/of_core.v0x0[14].messages.in.ofpt_packet_in")
+    @listen_to("kytos/of_core.v0x04.messages.in.ofpt_packet_in")
     def handle_packet_in(self, event):
         """Receives OpenFlow PacketIn msgs and search from trace packets.
         If process_packet_in returns 0,0,0, it means it is not a probe

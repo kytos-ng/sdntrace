@@ -3,7 +3,6 @@
 """
 
 
-import napps.amlight.sdntrace.backends.openflow10 as openflow10
 import napps.amlight.sdntrace.backends.openflow13 as openflow13
 from kytos.core import log
 
@@ -19,9 +18,7 @@ def process_packet_in(event):
         switch: incoming switch
     """
     of_version = event.content['message'].header.version
-    if of_version.value == 1:
-        return openflow10.packet_in(event, event.content['message'])
-    elif of_version.value == 4:
+    if of_version.value == 4:
         return openflow13.packet_in(event, event.content['message'])
 
     log.error("Invalid OpenFlow version")
@@ -41,9 +38,7 @@ def send_packet_out(controller, switch, port, data):
 
     of_version = switch.features.header.version
 
-    if of_version.value == 1:
-        openflow10.send_packet_out(controller, switch, port, data)
-    elif of_version.value == 4:
+    if of_version.value == 4:
         openflow13.send_packet_out(controller, switch, port, data)
     else:
         log.error("Invalid OpenFlow version")

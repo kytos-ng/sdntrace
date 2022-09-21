@@ -20,9 +20,9 @@ How to try the sdntrace napp?
   flows_h1_to_h4_working.sh: Configure switches for OpenFlow and create a functional path from H1 to H4
   flows_h1_to_h4_loop.sh: Configure switches for OpenFlow and create a loop on S3 between H1 and H4
 
-  To use, just run (add 1.0 if you want to use OpenFlow 1.0 instead of 1.3):
+  To use, just run (add 1.3 to use OpenFlow 1.3):
 
-  sudo sh <FILE> [1.0]
+  sudo sh <FILE> [1.3]
 
 5 - Open a second console and start Kytos enabling all links and switches
 

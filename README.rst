@@ -45,7 +45,7 @@ looking for PacketIn. If a PacketIn is not received in 1.5s, another PacketOut i
 PacketOuts are sent before generating a TimeOut event. Once the timeout is detected, all
 steps of the data plane path trace are provided via REST.
 
-This Napp works with both OpenFlow 1.0 and 1.3. Queries and results are also available through
+This Napp works with OpenFlow 1.3. Queries and results are also available through
 WEB UI.
 
 Events
@@ -54,7 +54,7 @@ Events
 Subscribed
 ----------
 
-- ``kytos/of_core.v0x0[14].messages.in.ofpt_packet_in``
+- ``kytos/of_core.v0x04.messages.in.ofpt_packet_in``
 
 Published
 ---------
