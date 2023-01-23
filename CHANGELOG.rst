@@ -5,24 +5,13 @@ All notable changes to the sdntrace NApp will be documented in this file.
 
 [UNRELEASED] - Under development
 ********************************
-Added
-=====
 
-Changed
-=======
-
-Deprecated
-==========
+[2022.3.0] - 2022-12-15
+***********************
 
 Removed
 =======
 - Removed support for OpenFlow 1.0
-
-Fixed
-=====
-
-Security
-========
 
 [2022.2.1] - 2022-08-15
 ***********************
