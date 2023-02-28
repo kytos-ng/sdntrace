@@ -47,7 +47,6 @@ class Main(KytosNApp):
 
     def setup(self):
         """Default Kytos/Napps setup call."""
-        log.info("Starting Kytos SDNTrace App version %s!", VERSION)
 
         # Create list of switches
         self.switches = Switches(
