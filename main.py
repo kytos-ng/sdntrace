@@ -28,7 +28,7 @@ from napps.amlight.sdntrace.backends.of_parser import process_packet_in
 from napps.amlight.sdntrace.shared.switches import Switches
 from napps.amlight.sdntrace.tracing.trace_manager import TraceManager
 
-from kytos.core import KytosNApp, log, rest
+from kytos.core import KytosNApp, rest
 from kytos.core.helpers import listen_to
 
 VERSION = "0.3"
