@@ -28,7 +28,7 @@ from napps.amlight.sdntrace.backends.of_parser import process_packet_in
 from napps.amlight.sdntrace.shared.switches import Switches
 from napps.amlight.sdntrace.tracing.trace_manager import TraceManager
 
-from kytos.core import KytosNApp, log, rest
+from kytos.core import KytosNApp, rest
 from kytos.core.helpers import listen_to
 
 VERSION = "0.3"
@@ -47,7 +47,6 @@ class Main(KytosNApp):
 
     def setup(self):
         """Default Kytos/Napps setup call."""
-        log.info("Starting Kytos SDNTrace App version %s!", VERSION)
 
         # Create list of switches
         self.switches = Switches(
