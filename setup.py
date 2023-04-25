@@ -147,7 +147,7 @@ class KytosInstall:
     def enable_core_napps():
         """Enable a NAPP by creating a symlink."""
         (ENABLED_PATH / NAPP_USERNAME).mkdir(parents=True, exist_ok=True)
-        for (user, napp) in ENABLED_NAPPS:
+        for user, napp in ENABLED_NAPPS:
             napp_path = Path(user, napp)
             src = ENABLED_PATH / napp_path
             dst = INSTALLED_PATH / napp_path
@@ -244,11 +244,7 @@ def read_version_from_json():
 def read_requirements(path="requirements/run.txt"):
     """Read requirements file and return a list."""
     with open(path, "r", encoding="utf8") as file:
-        return [
-            line.strip()
-            for line in file.readlines()
-            if not line.startswith("#")
-        ]
+        return [line.strip() for line in file.readlines() if not line.startswith("#")]
 
 
 def symlink_if_different(path, target):
@@ -274,15 +270,6 @@ setup(
     license="MIT",
     install_requires=read_requirements() + ["setuptools >= 59.6.0"],
     packages=[],
-    extras_require={
-        "dev": [
-            "pytest==7.0.0",
-            "pytest-cov==3.0.0",
-            "pip-tools",
-            "yala",
-            "tox",
-        ],
-    },
     cmdclass={
         "clean": Cleaner,
         "coverage": TestCoverage,
