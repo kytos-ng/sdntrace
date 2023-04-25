@@ -89,9 +89,7 @@ class TestTracePkt(TestCase):
         """Test get color from dpid."""
         mock_switch_colors.return_value = "ee:ee:ee:ee:ee:01"
 
-        switch, color = trace_pkt._get_node_color_from_dpid(
-            "00:00:00:00:00:00:00:01"
-        )
+        switch, color = trace_pkt._get_node_color_from_dpid("00:00:00:00:00:00:00:01")
 
         self.assertEqual(switch.dpid, "00:00:00:00:00:00:00:01")
         self.assertEqual(color, "ee:ee:ee:ee:ee:01")
@@ -100,9 +98,7 @@ class TestTracePkt(TestCase):
 
     def test_get_node_color_unknown_dpid(self):
         """Test get color from unknown dpid."""
-        switch, color = trace_pkt._get_node_color_from_dpid(
-            "99:99:99:99:99:99:99:99"
-        )
+        switch, color = trace_pkt._get_node_color_from_dpid("99:99:99:99:99:99:99:99")
 
         self.assertEqual(switch, 0)
         self.assertEqual(color, 0)
@@ -150,9 +146,7 @@ class TestTracePkt(TestCase):
         trace_msg = trace_pkt.process_packet(ethernet)
         self.assertEqual(trace_msg, expected)
 
-    @patch(
-        "napps.amlight.sdntrace.tracing.trace_pkt._get_node_color_from_dpid"
-    )
+    @patch("napps.amlight.sdntrace.tracing.trace_pkt._get_node_color_from_dpid")
     def test_prepare_next_packet(self, mock_get_color):
         """Test trace prepare next packet."""
         color_switch = MagicMock()

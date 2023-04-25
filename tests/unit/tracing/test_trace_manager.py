@@ -243,9 +243,7 @@ class TestTraceManager(TestCase):
 
         self.assertEqual(result["request_id"], 30001)
         self.assertEqual(result["result"][0]["type"], "starting")
-        self.assertEqual(
-            result["result"][0]["dpid"], "00:00:00:00:00:00:00:01"
-        )
+        self.assertEqual(result["result"][0]["dpid"], "00:00:00:00:00:00:00:01")
         self.assertEqual(result["result"][0]["port"], 1)
         self.assertIsNotNone(result["result"][0]["time"])
         self.assertIsNotNone(result["start_time"])
@@ -335,7 +333,6 @@ class TestTraceManagerTheadTest(TestCase):
     """Now, load all entries at once"""
 
     def setUp(self):
-
         # The decorator run_on_thread is patched, so methods that listen
         # for events do not run on threads while tested.
         # Decorators have to be patched before the methods that are

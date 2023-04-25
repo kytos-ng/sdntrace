@@ -29,16 +29,12 @@ class TestColors(TestCase):
         colors = color_manager._colors
 
         mock_request_get.assert_called_once()
-        self.assertEqual(
-            colors["aa:00:00:00:00:00:00:11"]["color_field"], "dl_src"
-        )
+        self.assertEqual(colors["aa:00:00:00:00:00:00:11"]["color_field"], "dl_src")
         self.assertEqual(
             colors["aa:00:00:00:00:00:00:11"]["color_value"],
             "ee:ee:ee:ee:01:2c",
         )
-        self.assertEqual(
-            colors["aa:00:00:00:00:00:00:12"]["color_field"], "dl_src"
-        )
+        self.assertEqual(colors["aa:00:00:00:00:00:00:12"]["color_field"], "dl_src")
         self.assertEqual(
             colors["aa:00:00:00:00:00:00:12"]["color_value"],
             "ee:ee:ee:ee:01:2d",
