@@ -80,7 +80,7 @@ class Main(KytosNApp):
     @rest("/trace", methods=["PUT"])
     def run_trace(self, request: Request) -> JSONResponse:
         """Submit a trace request."""
-        body = get_json_or_400(request)
+        body = get_json_or_400(request, self.controller.loop)
         return JSONResponse(self.tracing.rest_new_trace(body))
 
     @rest("/trace", methods=["GET"])
