@@ -22,7 +22,6 @@ At this moment, OpenFlow 1.3 is supported.
 """
 
 
-from flask import jsonify, request
 from napps.amlight.sdntrace import settings
 from napps.amlight.sdntrace.backends.of_parser import process_packet_in
 from napps.amlight.sdntrace.shared.switches import Switches
@@ -30,8 +29,7 @@ from napps.amlight.sdntrace.tracing.trace_manager import TraceManager
 
 from kytos.core import KytosNApp, rest
 from kytos.core.helpers import listen_to
-
-VERSION = "0.3"
+from kytos.core.rest_api import JSONResponse, Request, get_json_or_400
 
 
 class Main(KytosNApp):
@@ -80,44 +78,30 @@ class Main(KytosNApp):
             self.tracing.queue_probe_packet(event, ethernet, in_port, switch)
 
     @rest("/trace", methods=["PUT"])
-    def run_trace(self):
-        """Submit a trace request
-
-        Return:
-            trace ID in JSON format
-        """
-        return jsonify(self.tracing.rest_new_trace(request.get_json()))
+    def run_trace(self, request: Request) -> JSONResponse:
+        """Submit a trace request."""
+        body = get_json_or_400(request, self.controller.loop)
+        return JSONResponse(self.tracing.rest_new_trace(body))
 
     @rest("/trace", methods=["GET"])
-    def get_results(self):
-        """List all traces performed so far.
+    def get_results(self, _request: Request) -> JSONResponse:
+        """List all traces performed so far."""
+        return JSONResponse(self.tracing.rest_list_results())
 
-        Return:
-            rest_list_results in JSON format
-        """
-        return jsonify(self.tracing.rest_list_results())
-
-    @rest("/trace/<trace_id>", methods=["GET"])
-    def get_result(self, trace_id):
-        """List All Traces performed since the Napp loaded
-
-        Return:
-            rest_get_result in JSON format
-        """
-        return jsonify(self.tracing.rest_get_result(trace_id))
+    @rest("/trace/{trace_id}", methods=["GET"])
+    def get_result(self, request: Request) -> JSONResponse:
+        """List All Traces performed since the Napp loaded."""
+        trace_id = request.path_params["trace_id"]
+        return JSONResponse(self.tracing.rest_get_result(trace_id))
 
     @rest("/stats", methods=["GET"])
-    def get_stats(self):
-        """Get statistics
-
-        Return:
-            rest_list_stats in JSON format
-        """
-        return jsonify(self.tracing.rest_list_stats())
+    def get_stats(self, _request: Request) -> JSONResponse:
+        """Get statistics."""
+        return JSONResponse(self.tracing.rest_list_stats())
 
     @staticmethod
     @rest("/settings", methods=["GET"])
-    def list_settings():
+    def list_settings(_request: Request) -> JSONResponse:
         """List the SDNTrace settings
 
         Return:
@@ -128,5 +112,4 @@ class Main(KytosNApp):
         settings_dict["color_value"] = settings.COLOR_VALUE
         settings_dict["trace_interval"] = settings.TRACE_INTERVAL
         settings_dict["parallel_traces"] = settings.PARALLEL_TRACES
-        settings_dict["sdntrace_version"] = VERSION
-        return jsonify(settings_dict)
+        return JSONResponse(settings_dict)

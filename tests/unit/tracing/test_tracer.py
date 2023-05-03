@@ -97,15 +97,11 @@ class TestTracePath(TestCase):
         self.assertEqual(result["result"][0]["dpid"], dpid["dpid"])
         self.assertEqual(result["result"][0]["port"], dpid["in_port"])
 
-        self.assertEqual(
-            result["request"]["trace"]["switch"]["dpid"], dpid["dpid"]
-        )
+        self.assertEqual(result["request"]["trace"]["switch"]["dpid"], dpid["dpid"])
         self.assertEqual(
             result["request"]["trace"]["switch"]["in_port"], dpid["in_port"]
         )
-        self.assertEqual(
-            result["request"]["trace"]["eth"]["dl_vlan"], eth["dl_vlan"]
-        )
+        self.assertEqual(result["request"]["trace"]["eth"]["dl_vlan"], eth["dl_vlan"])
         self.assertEqual(mock_color.call_count, 2)
         self.assertEqual(mock_switch_colors.call_count, 2)
 
@@ -167,20 +163,14 @@ class TestTracePath(TestCase):
         self.assertEqual(result["result"][0]["port"], dpid["in_port"])
 
         self.assertEqual(result["result"][1]["type"], "trace")
-        self.assertEqual(
-            result["result"][1]["dpid"], "00:00:00:00:00:00:00:03"
-        )
+        self.assertEqual(result["result"][1]["dpid"], "00:00:00:00:00:00:00:03")
         self.assertEqual(result["result"][1]["port"], 3)
 
-        self.assertEqual(
-            result["request"]["trace"]["switch"]["dpid"], dpid["dpid"]
-        )
+        self.assertEqual(result["request"]["trace"]["switch"]["dpid"], dpid["dpid"])
         self.assertEqual(
             result["request"]["trace"]["switch"]["in_port"], dpid["in_port"]
         )
-        self.assertEqual(
-            result["request"]["trace"]["eth"]["dl_vlan"], eth["dl_vlan"]
-        )
+        self.assertEqual(result["request"]["trace"]["eth"]["dl_vlan"], eth["dl_vlan"])
         self.assertEqual(mock_color.call_count, 2)
         self.assertEqual(mock_switch_colors.call_count, 2)
 
@@ -358,9 +348,7 @@ class TestTracePath(TestCase):
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     @patch("napps.amlight.sdntrace.shared.colors.Colors._get_colors")
     @patch("napps.amlight.sdntrace.shared.switches.Switches.get_switch")
-    def test_check_loop_false(
-        self, mock_get_switch, mock_color, mock_switch_colors
-    ):
+    def test_check_loop_false(self, mock_get_switch, mock_color, mock_switch_colors):
         """Test check_loop with no loop detection."""
         mock_switch_colors.return_value = "ee:ee:ee:ee:ee:01"
 
