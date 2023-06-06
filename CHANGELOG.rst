@@ -6,6 +6,13 @@ All notable changes to the sdntrace NApp will be documented in this file.
 [UNRELEASED] - Under development
 ********************************
 
+[2023.1.0] - 2023-06-06
+***********************
+
+General Information
+===================
+- ``@rest`` endpoints are now run by ``starlette/uvicorn`` instead of ``flask/werkzeug``.
+
 [2022.3.0] - 2022-12-15
 ***********************
 
