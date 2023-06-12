@@ -6,6 +6,15 @@ All notable changes to the sdntrace NApp will be documented in this file.
 [UNRELEASED] - Under development
 ********************************
 
+Added
+=====
+- Added support to send an untagged Ethernet frame
+
+Changed
+=======
+- ``eth`` dict payload is not longer mandatory, if it's not set, it's considered a untagged frame, same behavior as ``sdntrace_cp``.
+
+
 [2022.3.0] - 2022-12-15
 ***********************
 
