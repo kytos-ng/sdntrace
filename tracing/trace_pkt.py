@@ -150,9 +150,10 @@ def _create_ethernet_frame(trace_entries, color):
     ethernet.source = color['color_value']
     ethernet.destination = trace_entries.dl_dst
 
-    vlan = VLAN(vid=trace_entries.dl_vlan,
-                pcp=trace_entries.dl_vlan_pcp)
-    ethernet.vlans.append(vlan)
+    if trace_entries.dl_vlan:
+        vlan = VLAN(vid=trace_entries.dl_vlan,
+                    pcp=trace_entries.dl_vlan_pcp)
+        ethernet.vlans.append(vlan)
     return ethernet
 
 

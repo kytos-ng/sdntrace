@@ -13,6 +13,14 @@ General Information
 ===================
 - ``@rest`` endpoints are now run by ``starlette/uvicorn`` instead of ``flask/werkzeug``.
 
+Added
+=====
+- Added support to send an untagged Ethernet frame
+
+Changed
+=======
+- ``eth`` dict payload is no longer mandatory, if it's not set, it's considered a untagged frame, same behavior as ``sdntrace_cp``.
+
 [2022.3.0] - 2022-12-15
 ***********************
 

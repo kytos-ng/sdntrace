@@ -480,7 +480,7 @@ class TestLoadEntries(TestCase):
             entries = {"trace": switch}
             self.trace_entries.load_entries(entries)
 
-    def test_missing_eth(self):
+    def test_invalid_eth(self):
         """key trace/switch is mandatory"""
         with self.assertRaises(ValueError):
             eth = 0
@@ -489,6 +489,14 @@ class TestLoadEntries(TestCase):
             entries = {"trace": switch}
             self.trace_entries.load_entries(entries)
 
+    def test_default_eth(self):
+        """Test default eth"""
+        dpid = {"dpid": "a", "in_port": 1}
+        switch = {"switch": dpid}
+        entries = {"trace": switch}
+        self.trace_entries.load_entries(entries)
+        assert not self.trace_entries.dl_vlan
+
     def test_minimally_correct(self):
         """key trace/switch is mandatory"""
         eth = {"dl_vlan": 100}
@@ -496,3 +504,6 @@ class TestLoadEntries(TestCase):
         switch = {"switch": dpid, "eth": eth}
         entries = {"trace": switch}
         self.trace_entries.load_entries(entries)
+        assert self.trace_entries.dl_vlan == eth["dl_vlan"]
+        assert self.trace_entries.dpid == dpid["dpid"]
+        assert self.trace_entries.in_port == dpid["in_port"]

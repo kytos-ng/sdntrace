@@ -19,7 +19,7 @@ class TraceEntries(object):
         self._dl_src = 0
         self._dl_dst = 'ca:fe:ca:fe:ca:fe'
         self._dl_vlan = 0
-        self._dl_type = 2048
+        self._dl_type = 0x800
         self._dl_vlan_pcp = 0
         self._nw_src = '1.1.1.1'
         self._nw_dst = '1.1.1.2'
@@ -320,16 +320,11 @@ class TraceEntries(object):
             self.in_port = switch['in_port']
 
         # Basic entries['trace']['switch']
-        if 'eth' not in trace:
-            raise ValueError("Error: eth not provided")
-        elif not isinstance(trace['eth'], dict):
+        eth = trace.get("eth", {})
+        if not isinstance(eth, dict):
             raise ValueError("Error: eth has to be dict")
 
-        eth = trace['eth']
-
-        if 'dl_vlan' not in eth:
-            raise ValueError("Error: dl_vlan not provided")
-        else:
+        if 'dl_vlan' in eth:
             self.dl_vlan = eth['dl_vlan']
 
         if 'dl_src' in eth:
