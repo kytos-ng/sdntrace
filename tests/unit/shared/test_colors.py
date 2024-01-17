@@ -1,11 +1,10 @@
 """Test the /shared/colors.py."""
-from unittest import TestCase
 from unittest.mock import patch, MagicMock
 from napps.amlight.sdntrace.shared.colors import Colors
 
 
 # pylint: disable=protected-access
-class TestColors(TestCase):
+class TestColors:
     """Test the Colors class."""
 
     @patch("requests.get")
@@ -29,16 +28,10 @@ class TestColors(TestCase):
         colors = color_manager._colors
 
         mock_request_get.assert_called_once()
-        self.assertEqual(colors["aa:00:00:00:00:00:00:11"]["color_field"], "dl_src")
-        self.assertEqual(
-            colors["aa:00:00:00:00:00:00:11"]["color_value"],
-            "ee:ee:ee:ee:01:2c",
-        )
-        self.assertEqual(colors["aa:00:00:00:00:00:00:12"]["color_field"], "dl_src")
-        self.assertEqual(
-            colors["aa:00:00:00:00:00:00:12"]["color_value"],
-            "ee:ee:ee:ee:01:2d",
-        )
+        assert colors["aa:00:00:00:00:00:00:11"]["color_field"] == "dl_src"
+        assert colors["aa:00:00:00:00:00:00:11"]["color_value"] == "ee:ee:ee:ee:01:2c"
+        assert colors["aa:00:00:00:00:00:00:12"]["color_field"] == "dl_src"
+        assert colors["aa:00:00:00:00:00:00:12"]["color_value"] == "ee:ee:ee:ee:01:2d"
 
     @patch("requests.get")
     def test_rest_colors_without_switches(self, mock_request_get):
@@ -54,7 +47,7 @@ class TestColors(TestCase):
         colors = color_manager._colors
 
         mock_request_get.assert_called_once()
-        self.assertEqual(colors, {})
+        assert colors == {}
 
     @patch("requests.get")
     def test_get_switch_colors(self, mock_request_get):
@@ -74,16 +67,16 @@ class TestColors(TestCase):
 
         # Call rest /colors
         color_manager = Colors()
-        self.assertEqual(mock_request_get.call_count, 1)
+        assert mock_request_get.call_count == 1
 
         color = color_manager.get_switch_color("aa:00:00:00:00:00:00:11")
 
-        self.assertEqual(mock_request_get.call_count, 2)
-        self.assertEqual(color["color_field"], "dl_src")
-        self.assertEqual(color["color_value"], "ee:ee:ee:ee:01:2c")
+        assert mock_request_get.call_count == 2
+        assert color["color_field"] == "dl_src"
+        assert color["color_value"] == "ee:ee:ee:ee:01:2c"
 
         color = color_manager.get_switch_color("aa:00:00:00:00:00:00:12")
 
-        self.assertEqual(mock_request_get.call_count, 3)
-        self.assertEqual(color["color_field"], "dl_src")
-        self.assertEqual(color["color_value"], "ee:ee:ee:ee:01:2d")
+        assert mock_request_get.call_count == 3
+        assert color["color_field"] == "dl_src"
+        assert color["color_value"] == "ee:ee:ee:ee:01:2d"

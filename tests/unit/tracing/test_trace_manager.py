@@ -2,8 +2,8 @@
     Test tracing.trace_manager
 """
 import time
-from unittest import TestCase
 from unittest.mock import patch, MagicMock
+import pytest
 
 from napps.amlight.sdntrace import settings
 from napps.amlight.sdntrace.tracing.trace_manager import TraceManager
@@ -19,24 +19,37 @@ from kytos.lib.helpers import (
 
 
 # pylint: disable=protected-access
-class TestTraceManager(TestCase):
+class TestTraceManager:
     """Unit tests for tracing.trace_manager.TraceManager"""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def commomn_patches(self, request):
+        """This function handles setup and cleanup for patches"""
+        # This fixture sets up the common patches,
+        # and a finalizer is added using addfinalizer to stop
+        # the common patches after each test. This ensures that the cleanup
+        # is performed after each test, and additional patch decorators
+        # can be used within individual test functions.
+
+        patcher = patch("kytos.core.helpers.run_on_thread", lambda x: x)
+        mock_patch = patcher.start()
+
+        _ = request.function.__name__
+
+        def cleanup():
+            patcher.stop()
+
+        request.addfinalizer(cleanup)
+        return mock_patch
+
+    def setup_method(self):
+        """Set up before each test method"""
         self.create_basic_switches(get_controller_mock())
-
-        # The decorator run_on_thread is patched, so methods that listen
-        # for events do not run on threads while tested.
-        # Decorators have to be patched before the methods that are
-        # decorated with them are imported.
-        patch("kytos.core.helpers.run_on_thread", lambda x: x).start()
-
-        self.addCleanup(patch.stopall)
         self.trace_manager = TraceManager(controller=get_controller_mock())
 
-    def tearDown(self) -> None:
+    def teardown_method(self) -> None:
+        """Clean up after each test method"""
         self.trace_manager.stop_traces()
-        return super().tearDown()
 
     @classmethod
     def create_basic_switches(cls, controller):
@@ -68,7 +81,7 @@ class TestTraceManager(TestCase):
         entries = {"trace": switch}
         entry = self.trace_manager.is_entry_valid(entries)
 
-        self.assertEqual(entry, "Unknown Switch")
+        assert entry == "Unknown Switch"
 
     def test_is_entry_empty_dpid(self):
         """Test if the entry request does not have a valid switch."""
@@ -78,9 +91,7 @@ class TestTraceManager(TestCase):
         entries = {"trace": switch}
         entry = self.trace_manager.is_entry_valid(entries)
 
-        self.assertEqual(
-            entry, "Error: dpid allows [a-f], int, and :. Lengths: 1-16 and 23"
-        )
+        assert entry == "Error: dpid allows [a-f], int, and :. Lengths: 1-16 and 23"
 
     def test_is_entry_missing_dpid(self):
         """Test if the entry request with missing dpid."""
@@ -90,7 +101,7 @@ class TestTraceManager(TestCase):
         entries = {"trace": switch}
         entry = self.trace_manager.is_entry_valid(entries)
 
-        self.assertEqual(entry, "Error: dpid not provided")
+        assert entry == "Error: dpid not provided"
 
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     def test_is_entry_invalid_not_colored(self, mock_colors):
@@ -101,7 +112,7 @@ class TestTraceManager(TestCase):
         switch = {"switch": dpid, "eth": eth}
         entries = {"trace": switch}
         entry = self.trace_manager.is_entry_valid(entries)
-        self.assertEqual(entry, "Switch not Colored")
+        assert entry == "Switch not Colored"
 
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     def test_is_entry_valid(self, mock_colors):
@@ -116,7 +127,7 @@ class TestTraceManager(TestCase):
         switch = {"switch": dpid, "eth": eth}
         entries = {"trace": switch}
         entry = self.trace_manager.is_entry_valid(entries)
-        self.assertEqual(entry.dpid, "00:00:00:00:00:00:00:01")
+        assert entry.dpid == "00:00:00:00:00:00:00:01"
 
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     def test_new_trace(self, mock_colors):
@@ -132,25 +143,25 @@ class TestTraceManager(TestCase):
         entries = {"trace": switch}
 
         trace_entries = self.trace_manager.is_entry_valid(entries)
-        self.assertIsInstance(trace_entries, TraceEntries)
+        assert isinstance(trace_entries, TraceEntries)
 
         trace_id = self.trace_manager.new_trace(trace_entries)
-        self.assertEqual(trace_id, 30001)
+        assert trace_id == 30001
 
         # new_trace does not check duplicated request.
         trace_id = self.trace_manager.new_trace(trace_entries)
-        self.assertEqual(trace_id, 30002)
+        assert trace_id == 30002
 
     def test_get_id(self):
         """Test trace manager ID control."""
         trace_id = self.trace_manager.get_id()
-        self.assertEqual(trace_id, 30001)
+        assert trace_id == 30001
 
         trace_id = self.trace_manager.get_id()
-        self.assertEqual(trace_id, 30002)
+        assert trace_id == 30002
 
         trace_id = self.trace_manager.get_id()
-        self.assertEqual(trace_id, 30003)
+        assert trace_id == 30003
 
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.send_trace_probe")
@@ -171,21 +182,21 @@ class TestTraceManager(TestCase):
         entries = {"trace": switch}
 
         trace_entries = self.trace_manager.is_entry_valid(entries)
-        self.assertIsInstance(trace_entries, TraceEntries)
+        assert isinstance(trace_entries, TraceEntries)
 
         trace_id = self.trace_manager.new_trace(trace_entries)
-        self.assertEqual(trace_id, 30001)
+        assert trace_id == 30001
 
         pending = self.trace_manager.number_pending_requests()
-        self.assertEqual(pending, 1)
+        assert pending == 1
 
         result = self.trace_manager.get_result(trace_id)
-        self.assertEqual(result, {"msg": "trace pending"})
+        assert result == {"msg": "trace pending"}
 
     def test_request_invalid_trace_id(self):
         """Test trace manager tracing request."""
         result = self.trace_manager.get_result("1234")
-        self.assertEqual(result, {"msg": "unknown trace id"})
+        assert result == {"msg": "unknown trace id"}
 
     def test_trace_in_process(self):
         """Test trace manager in process."""
@@ -227,7 +238,7 @@ class TestTraceManager(TestCase):
             time.sleep(0.1)
             count += 1
             if count > 30:
-                self.fail("Timeout waiting to start processing trace")
+                pytest.fail("Timeout waiting to start processing trace")
                 break
 
         count = 0
@@ -238,21 +249,18 @@ class TestTraceManager(TestCase):
             time.sleep(0.1)
             count += 1
             if count > 30:
-                self.fail("Timeout waiting to process trace")
+                pytest.fail("Timeout waiting to process trace")
                 break
 
-        self.assertEqual(result["request_id"], 30001)
-        self.assertEqual(result["result"][0]["type"], "starting")
-        self.assertEqual(result["result"][0]["dpid"], "00:00:00:00:00:00:00:01")
-        self.assertEqual(result["result"][0]["port"], 1)
-        self.assertIsNotNone(result["result"][0]["time"])
-        self.assertIsNotNone(result["start_time"])
-        self.assertIsNotNone(result["total_time"])
-        self.assertEqual(
-            result["request"]["trace"]["switch"]["dpid"],
-            "00:00:00:00:00:00:00:01",
-        )
-        self.assertEqual(result["request"]["trace"]["switch"]["in_port"], 1)
+        assert result["request_id"] == 30001
+        assert result["result"][0]["type"] == "starting"
+        assert result["result"][0]["dpid"] == "00:00:00:00:00:00:00:01"
+        assert result["result"][0]["port"] == 1
+        assert result["result"][0]["time"] is not None
+        assert result["start_time"] is not None
+        assert result["total_time"] is not None
+        assert result["request"]["trace"]["switch"]["dpid"] == "00:00:00:00:00:00:00:01"
+        assert result["request"]["trace"]["switch"]["in_port"] == 1
 
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     def test_duplicated_request(self, mock_colors):
@@ -268,13 +276,13 @@ class TestTraceManager(TestCase):
         entries = {"trace": switch}
 
         trace_entries = self.trace_manager.is_entry_valid(entries)
-        self.assertIsInstance(trace_entries, TraceEntries)
+        assert isinstance(trace_entries, TraceEntries)
 
         trace_id = self.trace_manager.new_trace(trace_entries)
-        self.assertEqual(trace_id, 30001)
+        assert trace_id == 30001
 
         duplicated = self.trace_manager.avoid_duplicated_request(trace_entries)
-        self.assertEqual(duplicated, True)
+        assert duplicated is True
 
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     def test_avoid_duplicated_request(self, mock_colors):
@@ -290,17 +298,17 @@ class TestTraceManager(TestCase):
         entries = {"trace": switch}
 
         trace_entries = self.trace_manager.is_entry_valid(entries)
-        self.assertIsInstance(trace_entries, TraceEntries)
+        assert isinstance(trace_entries, TraceEntries)
 
         trace_id = self.trace_manager.new_trace(trace_entries)
-        self.assertEqual(trace_id, 30001)
+        assert trace_id == 30001
 
         entries["trace"]["switch"]["dpid"] = "00:00:00:00:00:00:00:02"
         trace_entries = self.trace_manager.is_entry_valid(entries)
-        self.assertIsInstance(trace_entries, TraceEntries)
+        assert isinstance(trace_entries, TraceEntries)
 
         duplicated = self.trace_manager.avoid_duplicated_request(trace_entries)
-        self.assertEqual(duplicated, False)
+        assert duplicated is False
 
     def test_limit_traces_reached(self):
         """Test trace manager limit for thread processing."""
@@ -308,11 +316,11 @@ class TestTraceManager(TestCase):
         for i in range(settings.PARALLEL_TRACES - 1):
             self.trace_manager._running_traces[i] = i
             is_limit = self.trace_manager.limit_traces_reached()
-            self.assertFalse(is_limit)
+            assert not is_limit
 
         self.trace_manager._running_traces[settings.PARALLEL_TRACES] = 9999
         is_limit = self.trace_manager.limit_traces_reached()
-        self.assertTrue(is_limit)
+        assert is_limit
 
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.tracepath")
     def test_spawn_trace(self, mock_tracepath):
@@ -326,21 +334,28 @@ class TestTraceManager(TestCase):
         self.trace_manager._spawn_trace(trace_id, trace_entries)
 
         mock_tracepath.assert_called_once()
-        self.assertEqual(len(self.trace_manager._running_traces), 0)
+        assert len(self.trace_manager._running_traces) == 0
 
 
-class TestTraceManagerTheadTest(TestCase):
+class TestTraceManagerTheadTest:
     """Now, load all entries at once"""
 
-    def setUp(self):
-        # The decorator run_on_thread is patched, so methods that listen
-        # for events do not run on threads while tested.
-        # Decorators have to be patched before the methods that are
-        # decorated with them are imported.
-        patch("kytos.core.helpers.run_on_thread", lambda x: x).start()
-        # pylint: disable=import-outside-toplevel
-        self.addCleanup(patch.stopall)
+    @pytest.fixture(autouse=True)
+    def commomn_patches(self, request):
+        """This function handles setup and cleanup for patches"""
+        patcher = patch("kytos.core.helpers.run_on_thread", lambda x: x)
+        mock_patch = patcher.start()
 
+        _ = request.function.__name__
+
+        def cleanup():
+            patcher.stop()
+
+        request.addfinalizer(cleanup)
+        return mock_patch
+
+    def setup_method(self):
+        """Set up before each test method"""
         self.trace_manager = TraceManager(controller=get_controller_mock())
         self.trace_manager.stop_traces()
 
@@ -383,5 +398,5 @@ class TestTraceManagerTheadTest(TestCase):
         ):
             self.trace_manager._run_traces(0.5)
 
-        self.assertEqual(len(self.trace_manager._request_queue), 0)
-        self.assertEqual(self.trace_manager.number_pending_requests(), 0)
+        assert len(self.trace_manager._request_queue) == 0
+        assert self.trace_manager.number_pending_requests() == 0

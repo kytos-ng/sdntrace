@@ -1,9 +1,8 @@
 """
     Test tracing.trace_entries
 """
-from unittest import TestCase
 from unittest.mock import MagicMock, patch
-
+import pytest
 from napps.amlight.sdntrace.tracing.trace_msg import TraceMsg
 from napps.amlight.sdntrace.tracing.trace_manager import TraceManager
 from napps.amlight.sdntrace.tracing.tracer import TracePath
@@ -20,19 +19,32 @@ from kytos.lib.helpers import (
 
 # pylint: disable=too-many-public-methods, too-many-lines,
 # pylint: disable=protected-access, too-many-locals
-class TestTracePath(TestCase):
+class TestTracePath:
     """Test all combinations for DPID"""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def commomn_patches(self, request):
+        """This function handles setup and cleanup for patches"""
+        # This fixture sets up the common patches,
+        # and a finalizer is added using addfinalizer to stop
+        # the common patches after each test. This ensures that the cleanup
+        # is performed after each test, and additional patch decorators
+        # can be used within individual test functions.
+
+        patcher = patch("kytos.core.helpers.run_on_thread", lambda x: x)
+        mock_patch = patcher.start()
+
+        _ = request.function.__name__
+
+        def cleanup():
+            patcher.stop()
+
+        request.addfinalizer(cleanup)
+        return mock_patch
+
+    def setup_method(self):
+        """Set up before each test method"""
         self.create_basic_switches(get_controller_mock())
-
-        # The decorator run_on_thread is patched, so methods that listen
-        # for events do not run on threads while tested.
-        # Decorators have to be patched before the methods that are
-        # decorated with them are imported.
-        patch("kytos.core.helpers.run_on_thread", lambda x: x).start()
-
-        self.addCleanup(patch.stopall)
         self.trace_manager = TraceManager(controller=get_controller_mock())
 
     @classmethod
@@ -91,19 +103,17 @@ class TestTracePath(TestCase):
         # Retrieve trace result created from tracepath
         result = self.trace_manager.get_result(trace_id)
 
-        self.assertEqual(result["request_id"], 111)
-        self.assertEqual(len(result["result"]), 1)
-        self.assertEqual(result["result"][0]["type"], "starting")
-        self.assertEqual(result["result"][0]["dpid"], dpid["dpid"])
-        self.assertEqual(result["result"][0]["port"], dpid["in_port"])
+        assert result["request_id"] == 111
+        assert len(result["result"]) == 1
+        assert result["result"][0]["type"] == "starting"
+        assert result["result"][0]["dpid"] == dpid["dpid"]
+        assert result["result"][0]["port"] == dpid["in_port"]
 
-        self.assertEqual(result["request"]["trace"]["switch"]["dpid"], dpid["dpid"])
-        self.assertEqual(
-            result["request"]["trace"]["switch"]["in_port"], dpid["in_port"]
-        )
-        self.assertEqual(result["request"]["trace"]["eth"]["dl_vlan"], eth["dl_vlan"])
-        self.assertEqual(mock_color.call_count, 2)
-        self.assertEqual(mock_switch_colors.call_count, 2)
+        assert result["request"]["trace"]["switch"]["dpid"] == dpid["dpid"]
+        assert result["request"]["trace"]["switch"]["in_port"] == dpid["in_port"]
+        assert result["request"]["trace"]["eth"]["dl_vlan"] == eth["dl_vlan"]
+        assert mock_color.call_count == 2
+        assert mock_switch_colors.call_count == 2
 
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     @patch("napps.amlight.sdntrace.shared.colors.Colors._get_colors")
@@ -156,23 +166,21 @@ class TestTracePath(TestCase):
         # Retrieve trace result created from tracepath
         result = self.trace_manager.get_result(trace_id)
 
-        self.assertEqual(result["request_id"], 111)
-        self.assertEqual(len(result["result"]), 2)
-        self.assertEqual(result["result"][0]["type"], "starting")
-        self.assertEqual(result["result"][0]["dpid"], dpid["dpid"])
-        self.assertEqual(result["result"][0]["port"], dpid["in_port"])
+        assert result["request_id"] == 111
+        assert len(result["result"]) == 2
+        assert result["result"][0]["type"] == "starting"
+        assert result["result"][0]["dpid"] == dpid["dpid"]
+        assert result["result"][0]["port"] == dpid["in_port"]
 
-        self.assertEqual(result["result"][1]["type"], "trace")
-        self.assertEqual(result["result"][1]["dpid"], "00:00:00:00:00:00:00:03")
-        self.assertEqual(result["result"][1]["port"], 3)
+        assert result["result"][1]["type"] == "trace"
+        assert result["result"][1]["dpid"] == "00:00:00:00:00:00:00:03"
+        assert result["result"][1]["port"] == 3
 
-        self.assertEqual(result["request"]["trace"]["switch"]["dpid"], dpid["dpid"])
-        self.assertEqual(
-            result["request"]["trace"]["switch"]["in_port"], dpid["in_port"]
-        )
-        self.assertEqual(result["request"]["trace"]["eth"]["dl_vlan"], eth["dl_vlan"])
-        self.assertEqual(mock_color.call_count, 2)
-        self.assertEqual(mock_switch_colors.call_count, 2)
+        assert result["request"]["trace"]["switch"]["dpid"] == dpid["dpid"]
+        assert result["request"]["trace"]["switch"]["in_port"] == dpid["in_port"]
+        assert result["request"]["trace"]["eth"]["dl_vlan"] == eth["dl_vlan"]
+        assert mock_color.call_count == 2
+        assert mock_switch_colors.call_count == 2
 
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     @patch("napps.amlight.sdntrace.shared.colors.Colors._get_colors")
@@ -229,9 +237,9 @@ class TestTracePath(TestCase):
 
         mock_send_packet_out.assert_called_once()
 
-        self.assertEqual(result[0]["dpid"], "00:00:00:00:00:00:00:01")
-        self.assertEqual(result[0]["port"], 1)
-        self.assertEqual(result[1], "fake_event_object")
+        assert result[0]["dpid"] == "00:00:00:00:00:00:00:01"
+        assert result[0]["port"] == 1
+        assert result[1] == "fake_event_object"
         mock_color.assert_called_once()
         mock_switch_colors.assert_called_once()
 
@@ -279,10 +287,10 @@ class TestTracePath(TestCase):
 
         result = tracer.send_trace_probe(switch_obj, in_port, probe_pkt)
 
-        self.assertEqual(mock_send_packet_out.call_count, 3)
+        assert mock_send_packet_out.call_count == 3
 
-        self.assertEqual(result[0], "timeout")
-        self.assertEqual(result[1], False)
+        assert result[0] == "timeout"
+        assert result[1] is False
         mock_color.assert_called_once()
         mock_switch_colors.assert_called_once()
 
@@ -343,7 +351,7 @@ class TestTracePath(TestCase):
         result = tracer.check_loop()
         mock_color.assert_called_once()
         mock_switch_colors.assert_called_once()
-        self.assertEqual(result, True)
+        assert result is True
 
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     @patch("napps.amlight.sdntrace.shared.colors.Colors._get_colors")
@@ -390,7 +398,7 @@ class TestTracePath(TestCase):
         result = tracer.check_loop()
         mock_color.assert_called_once()
         mock_switch_colors.assert_called_once()
-        self.assertEqual(result, 0)
+        assert result == 0
 
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     @patch("napps.amlight.sdntrace.shared.colors.Colors._get_colors")
@@ -445,7 +453,7 @@ class TestTracePath(TestCase):
         result = tracer.check_loop()
         mock_color.assert_called_once()
         mock_switch_colors.assert_called_once()
-        self.assertEqual(result, 0)
+        assert result == 0
 
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     @patch("napps.amlight.sdntrace.shared.colors.Colors._get_colors")
@@ -506,8 +514,8 @@ class TestTracePath(TestCase):
         mock_probe.assert_called_once()
         mock_color.assert_called_once()
         mock_switch_colors.assert_called_once()
-        self.assertEqual(result[0]["type"], "trace")
-        self.assertEqual(result[0]["dpid"], "00:00:00:00:00:00:00:01")
+        assert result[0]["type"] == "trace"
+        assert result[0]["dpid"] == "00:00:00:00:00:00:00:01"
 
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     @patch("napps.amlight.sdntrace.shared.colors.Colors._get_colors")
@@ -550,9 +558,9 @@ class TestTracePath(TestCase):
         mock_probe.assert_called_once()
         mock_color.assert_called_once()
         mock_switch_colors.assert_called_once()
-        self.assertEqual(result[0]["type"], "last")
-        self.assertEqual(result[0]["reason"], "done")
-        self.assertEqual(result[0]["msg"], "none")
+        assert result[0]["type"] == "last"
+        assert result[0]["reason"] == "done"
+        assert result[0]["msg"] == "none"
 
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     @patch("napps.amlight.sdntrace.shared.colors.Colors._get_colors")
@@ -615,9 +623,9 @@ class TestTracePath(TestCase):
         mock_check_loop.assert_called_once()
         mock_next_packet.assert_not_called()
         mock_probe.assert_called_once()
-        self.assertEqual(mock_get_switch.call_count, 3)
+        assert mock_get_switch.call_count == 3
         mock_color.assert_called_once()
         mock_switch_colors.assert_called_once()
 
-        self.assertEqual(result[0]["type"], "trace")
-        self.assertEqual(result[0]["dpid"], "00:00:00:00:00:00:00:01")
+        assert result[0]["type"] == "trace"
+        assert result[0]["dpid"] == "00:00:00:00:00:00:00:01"

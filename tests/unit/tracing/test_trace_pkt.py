@@ -1,9 +1,9 @@
 """
     Test tracing.trace_entries
 """
-from unittest import TestCase
 from unittest.mock import MagicMock, patch
 from pyof.foundation.network_types import Ethernet
+import pytest
 
 from napps.amlight.sdntrace.tracing import trace_pkt
 from napps.amlight.sdntrace.shared.switches import Switches
@@ -17,19 +17,32 @@ from kytos.lib.helpers import (
 
 
 # pylint: disable=too-many-public-methods, too-many-lines, protected-access
-class TestTracePkt(TestCase):
+class TestTracePkt:
     """Test all combinations for DPID"""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def commomn_patches(self, request):
+        """This function handles setup and cleanup for patches"""
+        # This fixture sets up the common patches,
+        # and a finalizer is added using addfinalizer to stop
+        # the common patches after each test. This ensures that the cleanup
+        # is performed after each test, and additional patch decorators
+        # can be used within individual test functions.
+
+        patcher = patch("kytos.core.helpers.run_on_thread", lambda x: x)
+        mock_patch = patcher.start()
+
+        _ = request.function.__name__
+
+        def cleanup():
+            patcher.stop()
+
+        request.addfinalizer(cleanup)
+        return mock_patch
+
+    def setup_method(self):
+        """Set up before each test method"""
         self.create_basic_switches(get_controller_mock())
-
-        # The decorator run_on_thread is patched, so methods that listen
-        # for events do not run on threads while tested.
-        # Decorators have to be patched before the methods that are
-        # decorated with them are imported.
-        patch("kytos.core.helpers.run_on_thread", lambda x: x).start()
-
-        self.addCleanup(patch.stopall)
 
     @classmethod
     def create_basic_switches(cls, controller):
@@ -70,17 +83,16 @@ class TestTracePkt(TestCase):
         # new_trace does not check duplicated request.
         in_port, pkt = trace_pkt.generate_trace_pkt(trace_entries, color, r_id)
 
-        self.assertEqual(entries["trace"]["switch"]["in_port"], in_port)
-        self.assertEqual(
-            pkt,
-            b"\xca\xfe\xca\xfe\xca\xfe\xee\xee\xee\xee\xee"
+        assert entries["trace"]["switch"]["in_port"] == in_port
+        assert (
+            pkt == b"\xca\xfe\xca\xfe\xca\xfe\xee\xee\xee\xee\xee"
             b"\x01\x81\x00\x00d\x08\x00E\x00\x00p\x00\x00"
             b"\x00\x00\xff\x00\xb7\x89\x01\x01\x01\x01\x01"
             b"\x01\x01\x02\x80\x04\x95Q\x00\x00\x00\x00\x00"
             b"\x00\x00\x8c(napps.amlight.sdntrace.tracing."
             b"trace_msg\x94\x8c\x08TraceMsg\x94\x93\x94)"
             b"\x81\x94}\x94\x8c\x0b_request_id\x94M\xe7"
-            b"\x03sb.",
+            b"\x03sb."
         )
 
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
@@ -91,8 +103,8 @@ class TestTracePkt(TestCase):
 
         switch, color = trace_pkt._get_node_color_from_dpid("00:00:00:00:00:00:00:01")
 
-        self.assertEqual(switch.dpid, "00:00:00:00:00:00:00:01")
-        self.assertEqual(color, "ee:ee:ee:ee:ee:01")
+        assert switch.dpid == "00:00:00:00:00:00:00:01"
+        assert color == "ee:ee:ee:ee:ee:01"
         mock_color.assert_called_once()
         mock_switch_colors.assert_called_once()
 
@@ -100,8 +112,8 @@ class TestTracePkt(TestCase):
         """Test get color from unknown dpid."""
         switch, color = trace_pkt._get_node_color_from_dpid("99:99:99:99:99:99:99:99")
 
-        self.assertEqual(switch, 0)
-        self.assertEqual(color, 0)
+        assert switch == 0
+        assert color == 0
 
     def test_get_vlan_from_pkt(self):
         """Test get color from unknown dpid."""
@@ -118,7 +130,7 @@ class TestTracePkt(TestCase):
 
         vid = trace_pkt._get_vlan_from_pkt(pkt)
 
-        self.assertEqual(vid, 100)
+        assert vid == 100
 
     def test_process_packet(self):
         """Test process packet to find the trace message."""
@@ -144,7 +156,7 @@ class TestTracePkt(TestCase):
         ethernet.unpack(pkt)
 
         trace_msg = trace_pkt.process_packet(ethernet)
-        self.assertEqual(trace_msg, expected)
+        assert trace_msg == expected
 
     @patch("napps.amlight.sdntrace.tracing.trace_pkt._get_node_color_from_dpid")
     def test_prepare_next_packet(self, mock_get_color):
@@ -193,6 +205,6 @@ class TestTracePkt(TestCase):
         # result = [result_trace, result_color, result_switch]
         result = trace_pkt.prepare_next_packet(trace_entries, result, event)
 
-        self.assertEqual(result[0], trace_entries)
-        self.assertEqual(result[1], mock_get_color()[1])
-        self.assertEqual(result[2].dpid, color_switch.dpid)
+        assert result[0] == trace_entries
+        assert result[1] == mock_get_color()[1]
+        assert result[2].dpid == color_switch.dpid
