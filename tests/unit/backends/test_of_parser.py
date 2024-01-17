@@ -1,5 +1,4 @@
 """ Tests for /backends/of_parser.py """
-from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from napps.amlight.sdntrace.backends.of_parser import (
@@ -9,7 +8,7 @@ from napps.amlight.sdntrace.backends.of_parser import (
 
 
 # pylint: disable=too-many-public-methods, too-many-lines
-class TestOFParser(TestCase):
+class TestOFParser:
     """Unit tests for backends.of_parser functions"""
 
     def test_process_packet_in(self):
@@ -29,9 +28,9 @@ class TestOFParser(TestCase):
 
         ethernet, in_port, switch = process_packet_in(event)
 
-        self.assertEqual(ethernet.source.value, "ee:ee:ee:ee:ee:01")
-        self.assertEqual(in_port, 1)
-        self.assertEqual(switch, "ee:ee:ee:ee:ee:01")
+        assert ethernet.source.value == "ee:ee:ee:ee:ee:01"
+        assert in_port == 1
+        assert switch == "ee:ee:ee:ee:ee:01"
 
     @patch("napps.amlight.sdntrace.backends.openflow13.packet_in")
     def test_process_of13_packet_in_patched(self, mock_of13_packet_in):
@@ -55,9 +54,9 @@ class TestOFParser(TestCase):
 
         ethernet, in_port, switch = process_packet_in(event)
 
-        self.assertEqual(ethernet, 0)
-        self.assertEqual(in_port, 0)
-        self.assertEqual(switch, 0)
+        assert ethernet == 0
+        assert in_port == 0
+        assert switch == 0
 
         mock_of13_packet_in.assert_not_called()
 

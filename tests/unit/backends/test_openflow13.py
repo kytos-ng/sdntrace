@@ -1,5 +1,4 @@
 """ Tests for /backends/openflow13.py """
-from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from napps.amlight.sdntrace import settings
@@ -10,7 +9,7 @@ from napps.amlight.sdntrace.backends.openflow13 import (
 
 
 # pylint: disable=too-many-public-methods, too-many-lines
-class TestOpenflow13(TestCase):
+class TestOpenflow13:
     """Unit tests for backends.openflow13 functions"""
 
     def test_packet_in_with_color(self):
@@ -29,9 +28,9 @@ class TestOpenflow13(TestCase):
 
         ethernet, in_port, switch = packet_in(event, packet_in_msg)
 
-        self.assertEqual(ethernet.source.value, "ee:ee:ee:ee:ee:01")
-        self.assertEqual(in_port, 1)
-        self.assertEqual(switch, "ee:ee:ee:ee:ee:01")
+        assert ethernet.source.value == "ee:ee:ee:ee:ee:01"
+        assert in_port == 1
+        assert switch == "ee:ee:ee:ee:ee:01"
 
     def test_normal_packet_in(self):
         """Test packet in without color."""
@@ -48,9 +47,9 @@ class TestOpenflow13(TestCase):
 
         ethernet, in_port, switch = packet_in(event, packet_in_msg)
 
-        self.assertEqual(ethernet, 0)
-        self.assertEqual(in_port, 0)
-        self.assertEqual(switch, 0)
+        assert ethernet == 0
+        assert in_port == 0
+        assert switch == 0
 
     def test_packet_out_with_color(self):
         """Test packet in with color ee:ee:ee:ee:ee:01."""
@@ -70,18 +69,11 @@ class TestOpenflow13(TestCase):
         called_event = controller.buffers.msg_out.put.call_args.args[0]
 
         # Verify the packet_out values
-        self.assertEqual(
-            called_event.name, "kytos/of_lldp.messages.out.ofpt_packet_out"
-        )
-        self.assertEqual(
-            called_event.content["destination"].value, switch.connection.value
-        )
-        self.assertEqual(called_event.content["message"].in_port, port)
-        self.assertEqual(called_event.content["message"].data, data)
-        self.assertEqual(
-            called_event.content["message"].actions[0].port,
-            settings.OFPP_TABLE_13,
-        )
+        assert called_event.name == "kytos/of_lldp.messages.out.ofpt_packet_out"
+        assert called_event.content["destination"].value == switch.connection.value
+        assert called_event.content["message"].in_port == port
+        assert called_event.content["message"].data == data
+        assert called_event.content["message"].actions[0].port == settings.OFPP_TABLE_13
 
     @patch("napps.amlight.sdntrace.backends.openflow13.of_msg_prio")
     def test_send_packet_out(self, mock_of_msg_prio) -> None:
