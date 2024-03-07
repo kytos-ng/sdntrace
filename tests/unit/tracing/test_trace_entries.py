@@ -1,6 +1,7 @@
 """
     Test tracing.trace_entries
 """
+
 import pytest
 
 from napps.amlight.sdntrace.tracing.trace_entries import TraceEntries

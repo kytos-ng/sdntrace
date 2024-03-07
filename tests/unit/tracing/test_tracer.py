@@ -1,6 +1,7 @@
 """
     Test tracing.trace_entries
 """
+
 from unittest.mock import MagicMock, patch
 import pytest
 from napps.amlight.sdntrace.tracing.trace_msg import TraceMsg

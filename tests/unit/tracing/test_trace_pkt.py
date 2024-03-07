@@ -1,6 +1,7 @@
 """
     Test tracing.trace_entries
 """
+
 from unittest.mock import MagicMock, patch
 from pyof.foundation.network_types import Ethernet
 import pytest

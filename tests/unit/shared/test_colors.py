@@ -1,4 +1,5 @@
 """Test the /shared/colors.py."""
+
 from unittest.mock import patch, MagicMock
 from napps.amlight.sdntrace.shared.colors import Colors
 

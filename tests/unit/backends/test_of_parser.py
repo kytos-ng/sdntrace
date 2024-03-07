@@ -1,4 +1,5 @@
 """ Tests for /backends/of_parser.py """
+
 from unittest.mock import MagicMock, patch
 
 from napps.amlight.sdntrace.backends.of_parser import (

@@ -21,7 +21,6 @@ Dependencies:
 At this moment, OpenFlow 1.3 is supported.
 """
 
-
 from napps.amlight.sdntrace import settings
 from napps.amlight.sdntrace.backends.of_parser import process_packet_in
 from napps.amlight.sdntrace.shared.switches import Switches
