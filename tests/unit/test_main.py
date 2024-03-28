@@ -1,4 +1,5 @@
 """Module to test the main napp file."""
+
 from unittest.mock import patch
 
 from kytos.lib.helpers import get_controller_mock

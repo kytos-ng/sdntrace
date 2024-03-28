@@ -3,6 +3,7 @@
 Run "python3 setup.py --help-commands" to list all available commands and their
 descriptions.
 """
+
 import json
 import os
 import shutil
@@ -268,7 +269,7 @@ setup(
     author="Jeronimo Bezerra",
     author_email="jab@amlight.net",
     license="MIT",
-    install_requires=read_requirements() + ["setuptools >= 59.6.0"],
+    install_requires=read_requirements() + ["importlib_metadata"],
     packages=[],
     cmdclass={
         "clean": Cleaner,
@@ -283,7 +284,7 @@ setup(
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Operating System :: POSIX :: Linux",
-        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.11",
         "Topic :: System :: Networking",
     ],
 )
