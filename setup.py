@@ -269,7 +269,7 @@ setup(
     author="Jeronimo Bezerra",
     author_email="jab@amlight.net",
     license="MIT",
-    install_requires=read_requirements() + ["setuptools >= 59.6.0"],
+    install_requires=read_requirements() + ['importlib_metadata'],
     packages=[],
     cmdclass={
         "clean": Cleaner,
