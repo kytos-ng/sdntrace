@@ -1,0 +1,183 @@
+<template>
+  <div class="sdntrace_container">
+    <k-accordion>
+      <k-accordion-item title="Single Trace">
+        <k-context-panel v-if="is_empty" title="Empty Result" icon="gear">
+          </k-context-panel>
+            <div v-else class="data_table">
+              <table>
+                <thead>
+                  <tr>
+                    <th rowspan="2">Trace ID</th>
+                    <th rowspan="2">DPID</th>
+                    <th rowspan="2">Time</th>
+                    <th rowspan="2">Type</th>
+                    <th rowspan="2">Port</th>
+                </thead>
+                <tbody>
+                  <tr v-for="(item, index) in trace_results">
+                    <td>{{traceId}}</td>
+                    <td>{{item.dpid}}</td>
+                    <td>{{item.time}}</td>
+                    <td>{{item.type}}</td>
+                    <td>{{item.port}}</td>             
+                  </tr>
+                </tbody>
+            </table>
+          </div>
+        </k-accordion-item>
+        <k-accordion>          
+          <div>
+          <k-button icon="search" title="Fetch Trace" :on_click="fetchTrace"></k-button>
+          </div>
+        </k-accordion>
+        <k-accordion>          
+          <div>
+          <k-button icon="search" title="View All Traces" :on_click="get_all_traces"></k-button>
+          </div>
+        </k-accordion>
+    </k-accordion>
+  </div>
+</template>
+
+<script>
+ module.exports = {
+   props: ["content"],
+   methods: {
+    fetchTrace() {
+        var self = this;
+        $.ajax({
+            async: true,
+            dataType: "json",
+            type: "GET", 
+            url: `${this.$kytos_server_api}amlight/sdntrace/trace/${this.content}`,
+            success: function(response) {
+            self.trace_results = response.result; 
+            self.traceId = response.request_id;
+            self.is_empty = !self.trace_results.length; 
+            },
+            error: function() { 
+              self.is_empty = true;
+              self.trace_results = [];
+            }
+        });
+   },
+   
+ 
+    get_all_traces () {
+      var self = this
+      self.get_topology()
+
+      let request = $.ajax({
+        async: true,
+        dataType: "json",
+        type: "GET",
+        contentType: "application/json",
+        url: this.$kytos_server_api + "amlight/sdntrace/trace",
+      });
+
+      request.done(function(data) {
+        self.trace = data;
+        self.show_traces();
+      });
+
+      request.fail(function(data) {
+        let notification = {
+          icon: 'gear',
+          title: 'Bad request',
+          description: data.status + ': ' + data.responseJSON.description
+        };
+        self.$kytos.$emit("setNotification", notification);
+      });
+    },
+    
+    show_traces() {
+      var content = {
+        "component": 'amlight-sdntrace-k-info-panel-show_all_traces',
+        "content": this.trace,
+        "icon": "map-marker",
+        "title": "Trace",
+        "subtitle": "by amlight/sdntrace"
+      }
+      this.$kytos.$emit("showInfoPanel", content)
+    },
+    
+    get_topology(){
+      var self = this
+      $.ajax({
+        async: true,
+        dataType: "json",
+        url: this.$kytos_server_api + "kytos/topology/v3",
+
+        success: function(data) {
+          self.switches = data['topology']['switches']
+          self.links = data['topology']['links']
+        }
+      });
+    } 
+  },
+  watch: {
+    content: function() {
+    }
+  },
+  created() {
+    $('.k-info-panel:has(.sdntrace_container)').addClass('sdntrace-k-info-panel');
+  },
+  mounted() {
+    this.$parent.$el.style.width = "calc(100% - 300px)";
+  },
+  destroyed() {
+    $('.k-info-panel').removeClass('sdntrace_container-k-info-panel');
+  },
+   data () {
+     return {
+      trace_results: {},
+      is_empty: false,
+      traceId: "",
+      trace: {}
+     }
+   }
+ }
+</script>
+<style>
+.sdntrace-k-info-panel {
+  width: calc(100% - 300px);
+}
+.data_table {
+  color: #ccc;
+  max-height: 250px;
+  text-align: center;
+  margin: 0 auto;
+  display: block;
+  padding: 0.5em 0 1em 0.3em;
+  font-size: 0.8em;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.data_table table{
+  display: table;
+  width: 100%;
+}
+.data_table thead{
+  font-weight: bold;
+  background: #554077;
+}
+.data_table th{
+  padding: 0.6em 0 0.6em 0;
+  vertical-align: middle;
+  border: 1px solid;
+}
+.data_table td{
+  vertical-align: middle;
+  padding: 0.45em 0 0.45em 0;
+  word-break: break-all;
+  border: 1px solid;
+}
+.data_table tbody tr:nth-child(even) {
+  background: #313131;
+}
+.data_table tbody tr:hover {
+  color: #eee;
+  background-color: #666;
+}
+</style>
