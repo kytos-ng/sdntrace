@@ -16,7 +16,7 @@
                 </thead>
                 <tbody>
                   <tr v-for="(item, index) in trace_results">
-                    <td>{{traceId}}</td>
+                    <td>{{updateId}}</td>
                     <td>{{item.dpid}}</td>
                     <td>{{item.time}}</td>
                     <td>{{item.type}}</td>
@@ -50,6 +50,7 @@
           this.is_empty = false
           this.trace_results = this.content.result
           this.traceId = this.content.request_id
+          this.updateId = this.content.request_id
         } 
         else {
           this.is_empty = false
@@ -70,7 +71,7 @@
             url: `${this.$kytos_server_api}amlight/sdntrace/trace/${this.traceId}`,
             success: function(response) {
             self.trace_results = response.result; 
-            self.traceId = response.request_id;
+            self.updateId = response.request_id;
             self.is_empty = !self.trace_results.length; 
             },
             error: function() { 
@@ -153,6 +154,7 @@
       trace_results: {},
       is_empty: false,
       traceId: "",
+      updateId: "",
       trace: {}
      }
    }
