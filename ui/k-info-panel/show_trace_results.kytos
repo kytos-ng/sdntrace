@@ -44,13 +44,30 @@
  module.exports = {
    props: ["content"],
    methods: {
+    get_data(){
+      if (this.content){
+        if (this.content.result){
+          this.is_empty = false
+          this.trace_results = this.content.result
+          this.traceId = this.content.request_id
+        } 
+        else {
+          this.is_empty = false
+          this.traceId = this.content
+        }
+      }
+      else {
+          this.is_empty = true
+      }
+
+    },
     fetchTrace() {
         var self = this;
         $.ajax({
             async: true,
             dataType: "json",
             type: "GET", 
-            url: `${this.$kytos_server_api}amlight/sdntrace/trace/${this.content}`,
+            url: `${this.$kytos_server_api}amlight/sdntrace/trace/${this.traceId}`,
             success: function(response) {
             self.trace_results = response.result; 
             self.traceId = response.request_id;
@@ -118,9 +135,11 @@
   },
   watch: {
     content: function() {
+      this.get_data();
     }
   },
   created() {
+    this.get_data();
     $('.k-info-panel:has(.sdntrace_container)').addClass('sdntrace-k-info-panel');
   },
   mounted() {

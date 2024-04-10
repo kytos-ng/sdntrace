@@ -25,7 +25,7 @@
                       <td>{{ results_item.port }}</td>
                     </tr>
                     <div>
-                      <k-button icon="search" title="View" :on_click="() => view_trace(item.request_id)"></k-button>
+                      <k-button icon="search" title="View" :on_click="() => view_trace(item)"></k-button>
                     </div>
                   </template>
                 </tbody>
@@ -44,24 +44,20 @@
    props: ["content"],
    methods: {
     get_data(){
-      if (this.content != undefined && this.content != "")
-      {
-        if (this.content != "")
-        {
+      if(Object.keys(this.content).length != 0){
           this.is_empty = false
-          this.trace_results = this.content
-          
-        } else {
-          this.is_empty = true
-        }
+          this.trace_results = this.content 
       }
+      else {
+          this.is_empty = true
+      } 
     },
     
-    view_trace (id) {
+    view_trace (trace) {
       var content = {
         "component": 'amlight-sdntrace-k-info-panel-show_trace_results',
-        "content": id,
-        "icon": "search-location",
+        "content": trace,
+        "icon": "map-marker",
         "title": "Trace",
         "subtitle": "by amlight/sdntrace"
       }

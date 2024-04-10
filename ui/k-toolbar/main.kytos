@@ -55,6 +55,12 @@
               <k-input icon="arrow-right" title="nw_tos:" placeholder="nw_tos" :value.sync="ip.nw_tos">{{ ip.nw_tos }}</k-input>
 
           </k-accordion-item>
+          
+          
+          <k-accordion-item title="TP Parameters">
+            <k-input icon="arrow-right" title="tp_src:" placeholder="tp_src" :value.sync="tp.tp_src">{{ tp.tp_src }}</k-input>
+            <k-input icon="arrow-right" title="tp_dst:" placeholder="tp_dst" :value.sync="tp.tp_dst">{{ tp.tp_dst }}</k-input>
+          </k-accordion-item>      
 
           <div >
             <k-button icon="search" title="Start Trace" :on_click="start_trace">
@@ -66,6 +72,12 @@
             </k-button>
           </div>
           
+          </k-accordion-item>
+          
+          <k-accordion-item>
+            <div>
+             <k-button icon="search" title="View All Traces" :on_click="get_all_traces"></k-button>
+            </div>
           </k-accordion-item>
           
       </k-accordion>
@@ -99,7 +111,12 @@ module.exports = {
                      "ipv6_dst": self.ip.ipv6_dst,
                      "nw_proto": parseInt(self.ip.nw_proto) || "",
                      "nw_tos": parseInt(self.ip.nw_tos) || ""
-                   }
+                   },
+              tp: {
+                "tp_src": parseInt(self.tp.tp_src) || "",
+                "tp_dst": parseInt(self.tp.tp_dst) || ""
+              }
+
             }
           }
           
@@ -108,8 +125,11 @@ module.exports = {
                                                                                         }));
            payload.trace.ip = Object.fromEntries(Object.entries(payload.trace.ip).filter(function ([k, v]) {
                                                                                         return (v != "");
-                                                                                        }));      
-           
+                                                                                        }));  
+           payload.trace.tp = Object.fromEntries(Object.entries(payload.trace.tp).filter(function ([k, v]) {
+                                                                                        return (v != "");
+                                                                                        }));
+    
              let request= $.ajax({
               async: true,
               dataType: "json",
@@ -120,11 +140,14 @@ module.exports = {
              }); 
              
 
-      request.done(function(data) {
-        if (data.result.trace_id != "" && data.result.trace_id) { 
-           self.traceId = data.result.trace_id;
-           self.show(); 
-        };
+      request.done(function(data) { 
+        if (data.result.error) {
+             self.failNotification(data);
+           }
+        else { 
+            self.traceId = data.result.trace_id;          
+            self.show(); 
+       };
       });
            
    
@@ -134,20 +157,67 @@ module.exports = {
           title: ' Bad request',
           description: data.status + ': ' + data.responseJSON.description
         };
-        self.$kytos.$emit("setNotification", notification);
+         self.$kytos.$emit("setNotification", notification);
       });
       
+    },
+    
+    failNotification(data){  
+       let notification = {
+           icon: 'gear',
+           title: ' Bad request',
+           description: data.result.error 
+       };
+       self.$kytos.$emit("setNotification", notification);
+    },
+    
+    get_all_traces () {
+      var self = this
+      self.get_topology()
+
+      let request = $.ajax({
+        async: true,
+        dataType: "json",
+        type: "GET",
+        contentType: "application/json",
+        url: this.$kytos_server_api + "amlight/sdntrace/trace",
+      });
+
+      request.done(function(data) {
+        self.trace = data;
+        self.show_traces();
+      });
+
+      request.fail(function(data) {
+        let notification = {
+          icon: 'gear',
+          title: 'Bad request',
+          description: data.status + ': ' + data.responseJSON.description
+        };
+        self.$kytos.$emit("setNotification", notification);
+      });
+    },
+
+    show_traces() {
+      var content = {
+        "component": 'amlight-sdntrace-k-info-panel-show_all_traces',
+        "content": this.trace,
+        "icon": "map-marker",
+        "title": "Trace",
+        "subtitle": "by amlight/sdntrace"
+      }
+      this.$kytos.$emit("showInfoPanel", content)
     },
     
        
     show() {
       var content = {
-                    "component": 'amlight-sdntrace-k-info-panel-show_trace_results',
-                    "content": this.traceId,
-                    "icon": "map-marker",
-                    "title": "Trace",
-                    "subtitle": `by amlight/sdntrace`
-                    }
+          "component": 'amlight-sdntrace-k-info-panel-show_trace_results',
+          "content": this.traceId,
+          "icon": "map-marker",
+          "title": "Trace",
+          "subtitle": `by amlight/sdntrace`
+      }
       this.$kytos.$emit("showInfoPanel", content)
       },
       
@@ -179,7 +249,9 @@ module.exports = {
             this.ip.ipv6_dst = ""
             this.ip.nw_proto = ""
             this.ip.nw_tos = "" 
-            this.traceId = "" 
+            this.traceId = ""
+            this.tp.tp_src = ""
+            this.tp.tp_dst = ""
         }
 },
     computed: {
@@ -263,8 +335,13 @@ module.exports = {
                 "ipv6_dst": "",
                 "nw_proto": "",
                 "nw_tos": ""
-            }
-        }
+            },
+           tp: {
+                "tp_src": "",
+                "tp_dst": ""
+              }
+
+       }
      }
    }
 </script>
