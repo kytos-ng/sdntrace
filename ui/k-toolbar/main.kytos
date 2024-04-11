@@ -44,24 +44,9 @@
             <k-accordion-item title="IPV4">
               <k-input icon="arrow-right" title="nw_src:" placeholder="nw_src" :value.sync="ip.nw_src">{{ ip.nw_src }}</k-input>
               <k-input icon="arrow-right" title="nw_dst:" placeholder="nw_dst" :value.sync="ip.nw_dst">{{ ip.nw_dst }}</k-input>
-            </k-accordion-item>
-
-            <k-accordion-item title="IPV6">
-              <k-input icon="arrow-right" title="ipv6_src:" placeholder="ipv6_src" :value.sync="ip.ipv6_src">{{ ip.ipv6_src }}</k-input>
-              <k-input icon="arrow-right" title="ipv6_dst:" placeholder="ipv6_dst" :value.sync="ip.ipv6_dst">{{ ip.ipv6_dst }}</k-input>
-            </k-accordion-item>
-            <k-accordion>
-              <k-input icon="arrow-right" title="nw_proto:" placeholder="nw_proto" :value.sync="ip.nw_proto">{{ ip.nw_proto }}</k-input>
-              <k-input icon="arrow-right" title="nw_tos:" placeholder="nw_tos" :value.sync="ip.nw_tos">{{ ip.nw_tos }}</k-input>
-
           </k-accordion-item>
-          
-          
-          <k-accordion-item title="TP Parameters">
-            <k-input icon="arrow-right" title="tp_src:" placeholder="tp_src" :value.sync="tp.tp_src">{{ tp.tp_src }}</k-input>
-            <k-input icon="arrow-right" title="tp_dst:" placeholder="tp_dst" :value.sync="tp.tp_dst">{{ tp.tp_dst }}</k-input>
-          </k-accordion-item>      
 
+            
           <div >
             <k-button icon="search" title="Start Trace" :on_click="start_trace">
             </k-button>
@@ -74,7 +59,7 @@
           
           </k-accordion-item>
           
-          <k-accordion-item>
+          <k-accordion-item title="Get All Traces">
             <div>
              <k-button icon="search" title="View All Traces" :on_click="get_all_traces"></k-button>
             </div>
@@ -91,45 +76,35 @@ module.exports = {
   methods: {
     start_trace() {
       var self = this
-      self.get_topology()
       var payload = {
           trace: {
               switch: {
                   dpid: self.dpid,
-                  in_port: parseInt(self.in_port) || ""
+                  in_port: parseInt(self.in_port)
               },
               eth: {
-                "dl_vlan": parseInt(self.eth.dl_vlan) || "",
-                "dl_type": parseInt(self.eth.dl_type) || "",
+                "dl_vlan": parseInt(self.eth.dl_vlan),
+                "dl_type": parseInt(self.eth.dl_type),
                 "dl_src": self.eth.dl_src,
                 "dl_dst": self.eth.dl_dst
               },
               ip: {
-                     "nw_src": self.ip.nw_src,
-                     "nw_dst": self.ip.nw_dst,
-                     "ipv6_src": self.ip.ipv6_src,
-                     "ipv6_dst": self.ip.ipv6_dst,
-                     "nw_proto": parseInt(self.ip.nw_proto) || "",
-                     "nw_tos": parseInt(self.ip.nw_tos) || ""
-                   },
-              tp: {
-                "tp_src": parseInt(self.tp.tp_src) || "",
-                "tp_dst": parseInt(self.tp.tp_dst) || ""
+                "nw_src": self.ip.nw_src,
+                "nw_dst": self.ip.nw_dst
               }
-
             }
           }
           
-           payload.trace.eth = Object.fromEntries(Object.entries(payload.trace.eth).filter(function ([k, v]) {
+          
+          payload.trace.eth = Object.fromEntries(Object.entries(payload.trace.eth).filter(function ([k, v]) {
                                                                                         return (v != "");
                                                                                         }));
-           payload.trace.ip = Object.fromEntries(Object.entries(payload.trace.ip).filter(function ([k, v]) {
-                                                                                        return (v != "");
-                                                                                        }));  
-           payload.trace.tp = Object.fromEntries(Object.entries(payload.trace.tp).filter(function ([k, v]) {
+          payload.trace.ip = Object.fromEntries(Object.entries(payload.trace.ip).filter(function ([k, v]) {
                                                                                         return (v != "");
                                                                                         }));
-    
+          
+          
+          
              let request= $.ajax({
               async: true,
               dataType: "json",
@@ -173,8 +148,7 @@ module.exports = {
     
     get_all_traces () {
       var self = this
-      self.get_topology()
-
+      
       let request = $.ajax({
         async: true,
         dataType: "json",
@@ -222,7 +196,7 @@ module.exports = {
       },
       
     
-      get_topology(){
+    get_topology(){
       var self = this
       $.ajax({
         async: true,
@@ -236,23 +210,17 @@ module.exports = {
       });
     },
     
-       reset_inputs() {
-            this.dpid = ""
-            this.in_port = ""
-            this.eth.dl_vlan = ""
-            this.eth.dl_type = ""
-            this.eth.dl_src = ""
-            this.eth.dl_dst = ""
-            this.ip.nw_src = ""
-            this.ip.nw_dst = ""
-            this.ip.ipv6_src = ""
-            this.ip.ipv6_dst = ""
-            this.ip.nw_proto = ""
-            this.ip.nw_tos = "" 
-            this.traceId = ""
-            this.tp.tp_src = ""
-            this.tp.tp_dst = ""
-        }
+      reset_inputs() {
+          this.dpid = ""
+          this.in_port = ""
+          this.eth.dl_vlan = ""
+          this.eth.dl_type = ""
+          this.eth.dl_src = ""
+          this.eth.dl_dst = ""
+          this.ip.nw_src = ""
+          this.ip.nw_dst = ""
+          this.traceId = ""
+      }
 },
     computed: {
       get_dpids(){
@@ -330,22 +298,12 @@ module.exports = {
               },
            ip: {
                 "nw_src": "",
-                "nw_dst": "",
-                "ipv6_src":"",
-                "ipv6_dst": "",
-                "nw_proto": "",
-                "nw_tos": ""
-            },
-           tp: {
-                "tp_src": "",
-                "tp_dst": ""
-              }
-
+                "nw_dst": ""
+            }
        }
      }
    }
 </script>
-
 
 <style>
   .autocomplete-result-list li {

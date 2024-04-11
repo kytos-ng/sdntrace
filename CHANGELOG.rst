@@ -59,7 +59,7 @@ Added
 =====
 - Enhanced and standardized setup.py `install_requires` to install pinned dependencies
 
-[2023.1.0] - 2024-04-09
+[UNRELEASED] - Under development
 ***********************
 
 Added

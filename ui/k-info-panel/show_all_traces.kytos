@@ -4,7 +4,7 @@
       <k-accordion-item title="Trace Results">
         <k-context-panel v-if="is_empty" title="Empty Result" icon="gear">
           </k-context-panel>
-            <div v-else class="data_table">
+            <div v-else class="data_table" style="max-height: 90%;">
               <table>
                 <thead>
                   <tr>
