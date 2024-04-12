@@ -83,17 +83,19 @@ module.exports = {
                   in_port: parseInt(self.in_port)
               },
               eth: {
-                "dl_vlan": parseInt(self.eth.dl_vlan),
-                "dl_type": parseInt(self.eth.dl_type),
+                "dl_vlan": parseInt(self.eth.dl_vlan) || "",
+                "dl_type": parseInt(self.eth.dl_type) || "",
                 "dl_src": self.eth.dl_src,
                 "dl_dst": self.eth.dl_dst
               },
               ip: {
-                "nw_src": self.ip.nw_src,
-                "nw_dst": self.ip.nw_dst
-              }
+                     "nw_src": self.ip.nw_src,
+                     "nw_dst": self.ip.nw_dst
+                   }
             }
           }
+           
+           
           
           
           payload.trace.eth = Object.fromEntries(Object.entries(payload.trace.eth).filter(function ([k, v]) {
@@ -102,7 +104,14 @@ module.exports = {
           payload.trace.ip = Object.fromEntries(Object.entries(payload.trace.ip).filter(function ([k, v]) {
                                                                                         return (v != "");
                                                                                         }));
-          
+          if (Object.values(payload.trace.eth).every(value => value === "")) {
+            delete payload.trace.eth;
+          }
+
+   
+          if (Object.values(payload.trace.ip).every(value => value === "")) {
+            delete payload.trace.ip;
+          }
           
           
              let request= $.ajax({
@@ -148,7 +157,8 @@ module.exports = {
     
     get_all_traces () {
       var self = this
-      
+      self.get_topology()
+
       let request = $.ajax({
         async: true,
         dataType: "json",
@@ -196,7 +206,7 @@ module.exports = {
       },
       
     
-    get_topology(){
+      get_topology(){
       var self = this
       $.ajax({
         async: true,
@@ -210,17 +220,17 @@ module.exports = {
       });
     },
     
-      reset_inputs() {
-          this.dpid = ""
-          this.in_port = ""
-          this.eth.dl_vlan = ""
-          this.eth.dl_type = ""
-          this.eth.dl_src = ""
-          this.eth.dl_dst = ""
-          this.ip.nw_src = ""
-          this.ip.nw_dst = ""
-          this.traceId = ""
-      }
+       reset_inputs() {
+            this.dpid = ""
+            this.in_port = ""
+            this.eth.dl_vlan = ""
+            this.eth.dl_type = ""
+            this.eth.dl_src = ""
+            this.eth.dl_dst = ""
+            this.ip.nw_src = ""
+            this.ip.nw_dst = ""
+            this.traceId = ""
+        }
 },
     computed: {
       get_dpids(){
