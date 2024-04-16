@@ -11,6 +11,11 @@ Changed
 - Updated python environment installation from 3.9 to 3.11
 - Updated test dependencies
 
+Added
+=====
+
+- Added UI components to send a request, display a single trace, and display all traces.
+
 [2023.1.0] - 2023-06-06
 ***********************
 
