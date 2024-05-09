@@ -41,8 +41,8 @@
 </template>
 
 <script>
-module.exports = {
-  props: ["content"],  
+module.exports = { 
+  props: ["content"],
   methods: {
     get_data(){
       if (this.content){
@@ -104,7 +104,7 @@ module.exports = {
           title: 'Bad request',
           description: data.status + ': ' + data.responseJSON.description
         };
-        self.$kytos.$emit("setNotification", notification);
+        self.$kytos.eventBus.$emit("setNotification", notification);
       });
     },
     
@@ -148,15 +148,6 @@ module.exports = {
   destroyed() {
     $('.k-info-panel').removeClass('sdntrace_container-k-info-panel');
   },
-   data () {
-     return {
-      trace_results: {},
-      is_empty: false,
-      traceId: "",
-      updateId: "",
-      trace: {}
-     }
-   }
 }
 </script>
 <style>
