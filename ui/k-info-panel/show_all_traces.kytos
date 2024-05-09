@@ -40,19 +40,27 @@
 
 <script>
 module.exports = {
-  props: ["content"], 
+  props: ["content"],
+
+  data () {
+     return {
+      trace_results: {},
+      is_empty: false,
+      traceId: ""
+     }
+  },
   methods: {
-    get_data(){
-      if(Object.keys(this.content).length != 0){
-          this.is_empty = false
-          this.trace_results = this.content 
+    get_data: function() {
+      if(typeof this.content !== 'undefined' && this.content && Object.keys(this.content).length != 0) {
+          this.is_empty = false;
+          this.trace_results = this.content;
       }
       else {
-          this.is_empty = true
+          this.is_empty = true;
       } 
     },
     
-    view_trace (trace) {
+    view_trace: function(trace) {
       var content = {
         "component": 'amlight-sdntrace-k-info-panel-show_trace_results',
         "content": trace,
@@ -78,13 +86,6 @@ module.exports = {
   destroyed() {
     $('.k-info-panel').removeClass('sdntrace_container-k-info-panel');
   },
-   data () {
-     return {
-      trace_results: {},
-      is_empty: false,
-      traceId: ""
-     }
-   }
 }
 </script>
 <style>
