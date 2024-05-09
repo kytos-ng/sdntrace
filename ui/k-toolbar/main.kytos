@@ -4,7 +4,7 @@
       <k-accordion>
         <k-accordion-item title="Trace">
           <k-accordion-item title="Required Switch Parameters">
-          
+            
             <k-input-auto id="dpid" :value.sync="dpid"
                           title="DPID:"
                           placeholder="DPID" icon="arrow-right"
@@ -61,10 +61,12 @@
             <k-button icon="search" title="View All Traces" @click="get_all_traces"></k-button>
           </div>
         </k-accordion-item>
+          
       </k-accordion>
     </div>
   </k-toolbar-item>
 </template>
+
 
 <script>
 module.exports = {
@@ -90,9 +92,6 @@ module.exports = {
         }
       }
            
-           
-          
-           
       payload.trace.eth = Object.fromEntries(Object.entries(payload.trace.eth).filter(function ([k, v]) {
                                                                                         return (v != "");
                                                                                         }));
@@ -102,12 +101,10 @@ module.exports = {
       if (Object.values(payload.trace.eth).every(value => value === "")) {
         delete payload.trace.eth;
       }
-
    
       if (Object.values(payload.trace.ip).every(value => value === "")) {
         delete payload.trace.ip;
       }
-          
           
       let request= $.ajax({
               async: true,
@@ -135,7 +132,7 @@ module.exports = {
           title: ' Bad request',
           description: data.status + ': ' + data.responseJSON.description
         };
-         self.$kytos.$emit("setNotification", notification);
+        self.$kytos.eventBus.$emit("setNotification", notification);
       });
     },
     
@@ -171,7 +168,7 @@ module.exports = {
           title: 'Bad request',
           description: data.status + ': ' + data.responseJSON.description
         };
-        self.$kytos.$emit("setNotification", notification);
+        self.$kytos.eventBus.$emit("setNotification", notification);
       });
     },
 
@@ -183,7 +180,7 @@ module.exports = {
         "title": "Trace",
         "subtitle": "by amlight/sdntrace"
       }
-      this.$kytos.$emit("showInfoPanel", content)
+      this.$kytos.eventBus.$emit("showInfoPanel", content)
     },
     
        
@@ -195,7 +192,7 @@ module.exports = {
           "title": "Trace",
           "subtitle": `by amlight/sdntrace`
       }
-      this.$kytos.$emit("showInfoPanel", content)
+      this.$kytos.eventBus.$emit("showInfoPanel", content)
     },
     
     

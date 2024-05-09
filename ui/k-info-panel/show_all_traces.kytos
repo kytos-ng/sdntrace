@@ -40,7 +40,7 @@
 
 <script>
 module.exports = {
-  props: ["content"],
+  props: ["content"], 
   methods: {
     get_data(){
       if(Object.keys(this.content).length != 0){
@@ -60,7 +60,7 @@ module.exports = {
         "title": "Trace",
         "subtitle": "by amlight/sdntrace"
       }
-      this.$kytos.$emit("showInfoPanel", content)
+      this.$kytos.eventBus.$emit("showInfoPanel", content);
     } 
   },
   watch: {
