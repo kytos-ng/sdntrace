@@ -4,8 +4,8 @@
       <k-accordion>
         <k-accordion-item title="Trace">
           <k-accordion-item title="Required Switch Parameters">
-            
-            <k-input-auto id="dpid" :value.sync="dpid"
+           
+            <k-input-auto id="dpid" v-model:value="dpid"
                           title="DPID:"
                           placeholder="DPID" icon="arrow-right"
                           :candidates="dpids"
@@ -14,10 +14,10 @@
                           >{{ dpid }}
             </k-input-auto>
             
-            <k-input class="k-input interface-label" :value.sync="dpid_display" icon="none"
+            <k-input class="k-input interface-label" v-model:value="dpid_display" icon="none"
                       >{{ dpid_display }}</k-input>
             
-            <k-input-auto id="in_port" :value.sync="in_port"
+            <k-input-auto id="in_port" v-model:value="in_port"
                           title="Port:"
                           placeholder="Port" icon="arrow-right"
                           :candidates="port_numbers"
@@ -26,21 +26,21 @@
                       >{{ in_port }}
             </k-input-auto>
             
-            <k-input class="k-input interface-label" :value.sync="port_name" icon="none"
+            <k-input class="k-input interface-label" v-model:value="port_name" icon="none"
                       >{{ port_name }}</k-input>
           </k-accordion-item>
 
           <k-accordion-item title="Eth Parameters">
-            <k-input icon="arrow-right" title="dl_vlan:" placeholder="dl_vlan" :value.sync="eth.dl_vlan">{{ eth.dl_vlan }}</k-input>
-            <k-input icon="arrow-right" title="dl_type:" placeholder="dl_type" :value.sync="eth.dl_type">{{ eth.dl_type }}</k-input>
-            <k-input icon="arrow-right" title="dl_src:" placeholder="dl_src" :value.sync="eth.dl_src">{{ eth.dl_src }}</k-input>
-            <k-input icon="arrow-right" title="dl_dst:" placeholder="dl_dst" :value.sync="eth.dl_dst" >{{ eth.dl_dst }}</k-input>
+            <k-input icon="arrow-right" title="dl_vlan:" placeholder="dl_vlan" v-model:value="eth.dl_vlan">{{ eth.dl_vlan }}</k-input>
+            <k-input icon="arrow-right" title="dl_type:" placeholder="dl_type" v-model:value="eth.dl_type">{{ eth.dl_type }}</k-input>
+            <k-input icon="arrow-right" title="dl_src:" placeholder="dl_src" v-model:value="eth.dl_src">{{ eth.dl_src }}</k-input>
+            <k-input icon="arrow-right" title="dl_dst:" placeholder="dl_dst" v-model:value="eth.dl_dst" >{{ eth.dl_dst }}</k-input>
           </k-accordion-item>
           
           <k-accordion-item title="IP Parameters">
             <k-accordion-item title="IPV4">
-              <k-input icon="arrow-right" title="nw_src:" placeholder="nw_src" :value.sync="ip.nw_src">{{ ip.nw_src }}</k-input>
-              <k-input icon="arrow-right" title="nw_dst:" placeholder="nw_dst" :value.sync="ip.nw_dst">{{ ip.nw_dst }}</k-input>
+              <k-input icon="arrow-right" title="nw_src:" placeholder="nw_src" v-model:value="ip.nw_src">{{ ip.nw_src }}</k-input>
+              <k-input icon="arrow-right" title="nw_dst:" placeholder="nw_dst" v-model:value="ip.nw_dst">{{ ip.nw_dst }}</k-input>
           </k-accordion-item>
 
             
