@@ -28,22 +28,22 @@
         </k-accordion-item>
         <k-accordion>          
           <div>
-          <k-button icon="search" title="Fetch Trace" :on_click="fetchTrace"></k-button>
+          <k-button icon="search" title="Fetch Trace" @click="fetchTrace"></k-button>
           </div>
         </k-accordion>
         <k-accordion>          
           <div>
-          <k-button icon="search" title="View All Traces" :on_click="get_all_traces"></k-button>
+          <k-button icon="search" title="View All Traces" @click="get_all_traces"></k-button>
           </div>
         </k-accordion>
     </k-accordion>
   </div>
 </template>
-
+ 
 <script>
- module.exports = {
-   props: ["content"],
-   methods: {
+module.exports = {
+  props: ["content"],
+  methods: {
     get_data(){
       if (this.content){
         if (this.content.result){
@@ -58,7 +58,7 @@
         }
       }
       else {
-          this.is_empty = true
+        this.is_empty = true
       }
 
     },
@@ -132,7 +132,7 @@
           self.links = data['topology']['links']
         }
       });
-    } 
+    }
   },
   watch: {
     content: function() {
@@ -158,7 +158,7 @@
       trace: {}
      }
    }
- }
+}
 </script>
 <style>
 .sdntrace-k-info-panel {

@@ -25,7 +25,7 @@
                       <td>{{ results_item.port }}</td>
                     </tr>
                     <div>
-                      <k-button icon="search" title="View" :on_click="() => view_trace(item)"></k-button>
+                      <k-button icon="search" title="View" @click="() => view_trace(item)"></k-button>
                     </div>
                   </template>
                 </tbody>
@@ -33,16 +33,15 @@
           </div>
         </k-accordion-item>
         <k-accordion>          
-       
         </k-accordion>
     </k-accordion>
   </div>
 </template>
 
 <script>
- module.exports = {
-   props: ["content"],
-   methods: {
+module.exports = {
+  props: ["content"],
+  methods: {
     get_data(){
       if(Object.keys(this.content).length != 0){
           this.is_empty = false
@@ -86,7 +85,7 @@
       traceId: ""
      }
    }
- }
+}
 </script>
 <style>
 .sdntrace-k-info-panel {
