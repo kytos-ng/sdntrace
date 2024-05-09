@@ -41,10 +41,19 @@
 </template>
 
 <script>
-module.exports = { 
+module.exports = {
   props: ["content"],
+  data () {
+    return {
+      trace_results: {},
+      is_empty: false,
+      traceId: "",
+      updateId: "",
+      trace: {}
+    }
+  },
   methods: {
-    get_data(){
+    get_data: function() {
       if (this.content){
         if (this.content.result){
           this.is_empty = false
@@ -108,7 +117,7 @@ module.exports = {
       });
     },
     
-    show_traces() {
+    show_traces: function() {
       var content = {
         "component": 'amlight-sdntrace-k-info-panel-show_all_traces',
         "content": this.trace,
@@ -119,8 +128,8 @@ module.exports = {
       this.$kytos.eventBus.$emit("showInfoPanel", content)
     },
     
-    get_topology(){
-      var self = this
+    get_topology: function() {
+      var self = this;
       $.ajax({
         async: true,
         dataType: "json",
@@ -134,7 +143,7 @@ module.exports = {
     }
   },
   watch: {
-    content: function() {
+    content(value, oldValue) {
       this.get_data();
     }
   },
@@ -145,7 +154,7 @@ module.exports = {
   mounted() {
     this.$parent.$el.style.width = "calc(100% - 300px)";
   },
-  destroyed() {
+  unmounted() {
     $('.k-info-panel').removeClass('sdntrace_container-k-info-panel');
   },
 }
