@@ -20,6 +20,7 @@ Dependencies:
 
 At this moment, OpenFlow 1.3 is supported.
 """
+
 import pathlib
 
 from napps.amlight.sdntrace import settings
