@@ -1,0 +1,240 @@
+openapi: '3.0.0'
+info:
+  version: none
+  title: amlight/sdntrace
+  description: Create and look up OpenFlow path traces.
+servers:
+  - url: /api/amlight/sdntrace
+paths:
+  /trace:
+    get:
+      summary: List traces
+      description: Get all traces available from the database
+      operationId: get_results
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/CompleteResult'
+    put:
+      summary: Run trace
+      description: Run an OpenFlow path trace
+      operationId: run_trace
+      requestBody:
+        description: Trace an OpenFlow path in the dataplane
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TraceRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: object
+                    properties:
+                      trace_id:
+                        type: integer
+                        format: int32
+                      error: # This property will show only error messages
+                        type: string
+        '400':
+          description: Bad request.
+
+  /trace/{trace_id}:
+    get:
+      summary: Get trace details
+      description: Request trace details by providing the trace_id
+      operationId: get_result
+      parameters:
+        - name: trace_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/TransactionProgram'
+                  - type: object
+                    properties:
+                      msg:  # This property will show only error messages
+                        type: string
+
+  /stats:
+    get:
+      summary: Get trace statistics
+      description: Request trace statistics details
+      operationId: get_stats
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistics'
+
+  /settings:
+    get:
+      summary: Get settings
+      description: Request settings for sdntrace
+      operationId: list_settings
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settings'
+
+components:
+  schemas:
+    Statistics: # Can be referenced via '#/components/schemas/Statistics'
+      type: object
+      properties:
+        number_of_requests:
+          type: integer
+          format: int32
+        number_of_running_traces:
+          type: integer
+          format: int32
+        number_of_pending_traces:
+          type: integer
+          format: int32
+        list_of_pending_traces:
+          type: object
+          additionalProperties:
+                  $ref: '#/components/schemas/CompleteResult'
+    CompleteResult: # Can be referenced via '#/components/schemas/CompleteResult'
+      type: object
+      properties:
+        request_id:
+          type: integer
+          format: int32
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/TraceResult'
+        start_time:
+          type: string
+          format: date-time
+        total_time:
+          type: string
+          format: date-time
+        request:
+          $ref: '#/components/schemas/TraceRequest'
+    TraceResult: # Can be referenced via '#/components/schemas/TraceResult'
+      type: object
+      properties:
+        type:
+          type: string
+        dpid:
+          type: string
+          format: MAC
+        port:
+          type: integer
+        time:
+          type: string
+          format: date-time
+        reason:
+          type: string
+        msg:
+          type: string
+    TraceRequest: # Can be referenced via '#/components/schemas/TraceRequest'
+      type: object
+      required:
+        - trace
+      properties:
+        trace:
+          type: object
+          required:
+          - switch
+          properties:
+            switch:
+              $ref: '#/components/schemas/Switch'
+            eth:
+              $ref: '#/components/schemas/Ethernet'
+            ip:
+              $ref: '#/components/schemas/InternetProtocol'
+            tp:
+              $ref: '#/components/schemas/TransactionProgram'
+    Switch: # Can be referenced via '#/components/schemas/Switch'
+      type: object
+      required:
+        - dpid
+        - in_port
+      properties:
+        dpid:
+          type: string
+          format: MAC
+        in_port:
+          type: integer
+          format: int32
+    Ethernet: # Can be referenced via '#/components/schemas/Ethernet'
+      type: object
+      properties:
+        dl_vlan:
+          type: integer
+          format: int32
+        dl_src:
+          type: integer
+          format: int32
+        dl_dst:
+          type: string
+          format: MAC
+        dl_vlan_pcp:
+          type: integer
+          format: int32
+        dl_type:
+          type: integer
+          format: int32
+    InternetProtocol: # Can be referenced via '#/components/schemas/InternetProtocol'
+      type: object
+      properties:
+        nw_src:
+          type: string
+          format: dotted-decimal
+        nw_dst:
+          type: string
+          format: dotted-decimal
+        nw_tos:
+          type: integer
+          format: int32
+        # nw_proto: # Future release
+        #   type: integer
+        #   format: int32
+    TransactionProgram: # Can be referenced via '#/components/schemas/TransactionProgram'
+      type: object
+      properties:
+        tp_src:
+          type: integer
+          format: int32
+        tp_dst:
+          type: integer
+          format: int32
+    Settings: # Can be referenced via '#/components/schemas/Settings'
+      type: object
+      properties:
+        color_field:
+          type: string
+        color_value:
+          type: string
+          format: MAC
+        trace_interval:
+          type: integer
+          format: int32
+        parallel_traces:
+          type: integer
+          format: int32

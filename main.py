@@ -21,13 +21,15 @@ Dependencies:
 At this moment, OpenFlow 1.3 is supported.
 """
 
+import pathlib
+
 from napps.amlight.sdntrace import settings
 from napps.amlight.sdntrace.backends.of_parser import process_packet_in
 from napps.amlight.sdntrace.shared.switches import Switches
 from napps.amlight.sdntrace.tracing.trace_manager import TraceManager
 
 from kytos.core import KytosNApp, rest
-from kytos.core.helpers import listen_to
+from kytos.core.helpers import listen_to, load_spec, validate_openapi
 from kytos.core.rest_api import JSONResponse, Request, get_json_or_400
 
 
@@ -41,6 +43,8 @@ class Main(KytosNApp):
         /sdntrace/stats - Show the number of requests received and active
         /sdntrace/settings - list the settings
     """
+
+    spec = load_spec(pathlib.Path(__file__).parent / "openapi.yml")
 
     def setup(self):
         """Default Kytos/Napps setup call."""
@@ -77,6 +81,7 @@ class Main(KytosNApp):
             self.tracing.queue_probe_packet(event, ethernet, in_port, switch)
 
     @rest("/trace", methods=["PUT"])
+    @validate_openapi(spec)
     def run_trace(self, request: Request) -> JSONResponse:
         """Submit a trace request."""
         body = get_json_or_400(request, self.controller.loop)
