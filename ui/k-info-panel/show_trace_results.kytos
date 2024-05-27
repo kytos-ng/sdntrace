@@ -28,12 +28,12 @@
         </k-accordion-item>
         <k-accordion>          
           <div>
-          <k-button icon="search" title="Fetch Trace" :on_click="fetchTrace"></k-button>
+          <k-button icon="search" title="Fetch Trace" @click="fetchTrace"></k-button>
           </div>
         </k-accordion>
         <k-accordion>          
           <div>
-          <k-button icon="search" title="View All Traces" :on_click="get_all_traces"></k-button>
+          <k-button icon="search" title="View All Traces" @click="get_all_traces"></k-button>
           </div>
         </k-accordion>
     </k-accordion>
@@ -105,7 +105,7 @@
           title: 'Bad request',
           description: data.status + ': ' + data.responseJSON.description
         };
-        self.$kytos.$emit("setNotification", notification);
+        self.$kytos.eventBus.$emit("setNotification", notification);
       });
     },
     
@@ -114,10 +114,11 @@
         "component": 'amlight-sdntrace-k-info-panel-show_all_traces',
         "content": this.trace,
         "icon": "map-marker",
+        "maximized": true,
         "title": "Trace",
         "subtitle": "by amlight/sdntrace"
       }
-      this.$kytos.$emit("showInfoPanel", content)
+      this.$kytos.eventBus.$emit("showInfoPanel", content)
     },
     
     get_topology(){
@@ -146,7 +147,7 @@
   mounted() {
     this.$parent.$el.style.width = "calc(100% - 300px)";
   },
-  destroyed() {
+  unmounted() {
     $('.k-info-panel').removeClass('sdntrace_container-k-info-panel');
   },
    data () {
