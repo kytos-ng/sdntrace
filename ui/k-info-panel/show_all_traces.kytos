@@ -58,6 +58,7 @@
         "component": 'amlight-sdntrace-k-info-panel-show_trace_results',
         "content": trace,
         "icon": "map-marker",
+        "maximized": true,
         "title": "Trace",
         "subtitle": "by amlight/sdntrace"
       }
