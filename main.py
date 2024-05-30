@@ -80,31 +80,31 @@ class Main(KytosNApp):
         if not isinstance(ethernet, int):
             self.tracing.queue_probe_packet(event, ethernet, in_port, switch)
 
-    @rest("/trace", methods=["PUT"])
+    @rest("/v1/trace", methods=["PUT"])
     @validate_openapi(spec)
     def run_trace(self, request: Request) -> JSONResponse:
         """Submit a trace request."""
         body = get_json_or_400(request, self.controller.loop)
         return JSONResponse(self.tracing.rest_new_trace(body))
 
-    @rest("/trace", methods=["GET"])
+    @rest("/v1/trace", methods=["GET"])
     def get_results(self, _request: Request) -> JSONResponse:
         """List all traces performed so far."""
         return JSONResponse(self.tracing.rest_list_results())
 
-    @rest("/trace/{trace_id}", methods=["GET"])
+    @rest("/v1/trace/{trace_id}", methods=["GET"])
     def get_result(self, request: Request) -> JSONResponse:
         """List All Traces performed since the Napp loaded."""
         trace_id = request.path_params["trace_id"]
         return JSONResponse(self.tracing.rest_get_result(trace_id))
 
-    @rest("/stats", methods=["GET"])
+    @rest("/v1/stats", methods=["GET"])
     def get_stats(self, _request: Request) -> JSONResponse:
         """Get statistics."""
         return JSONResponse(self.tracing.rest_list_stats())
 
     @staticmethod
-    @rest("/settings", methods=["GET"])
+    @rest("/v1/settings", methods=["GET"])
     def list_settings(_request: Request) -> JSONResponse:
         """List the SDNTrace settings
 

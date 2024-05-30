@@ -120,7 +120,7 @@ module.exports = {
               type: "PUT",
               contentType: "application/json",
               data: JSON.stringify(payload),
-              url: this.$kytos_server_api + "amlight/sdntrace/trace",
+              url: this.$kytos_server_api + "amlight/sdntrace/v1/trace",
              }); 
              
 
@@ -164,7 +164,7 @@ module.exports = {
         dataType: "json",
         type: "GET",
         contentType: "application/json",
-        url: this.$kytos_server_api + "amlight/sdntrace/trace",
+        url: this.$kytos_server_api + "amlight/sdntrace/v1/trace",
       });
 
       request.done(function(data) {
