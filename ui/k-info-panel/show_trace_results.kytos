@@ -68,7 +68,7 @@
             async: true,
             dataType: "json",
             type: "GET", 
-            url: `${this.$kytos_server_api}amlight/sdntrace/trace/${this.traceId}`,
+            url: `${this.$kytos_server_api}amlight/sdntrace/v1/trace/${this.traceId}`,
             success: function(response) {
             self.trace_results = response.result; 
             self.updateId = response.request_id;
@@ -91,7 +91,7 @@
         dataType: "json",
         type: "GET",
         contentType: "application/json",
-        url: this.$kytos_server_api + "amlight/sdntrace/trace",
+        url: this.$kytos_server_api + "amlight/sdntrace/v1/trace",
       });
 
       request.done(function(data) {

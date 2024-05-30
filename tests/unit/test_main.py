@@ -121,8 +121,10 @@ class TestMain:
         assert result == "success_mock"
 
     # pylint: disable=protected-access
-    async def test_get_stats(self):
+    @patch("napps.amlight.sdntrace.tracing.trace_manager.new_thread")
+    async def test_get_stats(self, mock_thread):
         """Test get_stats"""
+        mock_thread.return_value = True
         traces_n = 99
         traces_running = {"mock": "request"}
         queue_request = {"mock1": "trace1", "mock2": "trace2"}
