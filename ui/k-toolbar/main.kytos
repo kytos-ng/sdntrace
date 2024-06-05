@@ -41,8 +41,8 @@
             <k-accordion-item title="IPV4">
               <k-input icon="arrow-right" title="nw_src:" placeholder="nw_src" v-model:value="ip.nw_src">{{ ip.nw_src }}</k-input>
               <k-input icon="arrow-right" title="nw_dst:" placeholder="nw_dst" v-model:value="ip.nw_dst">{{ ip.nw_dst }}</k-input>
+            </k-accordion-item>
           </k-accordion-item>
-
             
           <div >
             <k-button icon="search" title="Start Trace" @click="start_trace">
