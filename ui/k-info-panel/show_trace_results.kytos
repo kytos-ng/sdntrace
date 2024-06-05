@@ -153,7 +153,7 @@ module.exports = {
     $('.k-info-panel:has(.sdntrace_container)').addClass('sdntrace-k-info-panel');
   },
   mounted() {
-    this.$parent.$el.style.width = "calc(100% - 300px)";
+    //this.$parent.$el.style.width = "calc(100% - 300px)";
   },
   unmounted() {
     $('.k-info-panel').removeClass('sdntrace_container-k-info-panel');
