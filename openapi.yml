@@ -212,9 +212,9 @@ components:
         nw_tos:
           type: integer
           format: int32
-        # nw_proto: # Future release
-        #   type: integer
-        #   format: int32
+        nw_proto:
+          type: integer
+          format: int32
     TransactionProgram: # Can be referenced via '#/components/schemas/TransactionProgram'
       type: object
       properties:

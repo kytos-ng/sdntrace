@@ -8,7 +8,7 @@ import dill
 from pyof.foundation.network_types import Ethernet, IPv4, VLAN
 from napps.amlight.sdntrace import constants
 from napps.amlight.sdntrace.tracing.trace_msg import TraceMsg
-# from napps.amlight.sdntrace.shared.extd_nw_types import TCP, UDP
+from napps.amlight.sdntrace.shared.extd_nw_types import TCP, UDP
 from napps.amlight.sdntrace.shared.switches import Switches
 from napps.amlight.sdntrace.shared.colors import Colors
 
@@ -41,17 +41,13 @@ def generate_trace_pkt(trace_entries, color, r_id):
     if ethernet.ether_type == constants.IPV4:
         ip_pkt = _create_ip_packet(trace_entries)
         if ip_pkt.protocol == constants.TCP:
-            # No dissector for TCP yet
-            ip_pkt.data = dill.dumps(msg)
-
-            # tp_pkt = _create_tcp_packet(trace_entries)
-            # ip_pkt.data = tp_pkt.pack()
+            tp_pkt = _create_tcp_packet(trace_entries)
+            tp_pkt.data = dill.dumps(msg)
+            ip_pkt.data = tp_pkt.pack(ip_pkt)
         elif ip_pkt.protocol == constants.UDP:
-            # No dissector for UDP yet
-            ip_pkt.data = dill.dumps(msg)
-
-            # tp_pkt = _create_udp_packet(trace_entries)
-            # ip_pkt.data = tp_pkt.pack()
+            udp_pkt = _create_udp_packet(trace_entries)
+            udp_pkt.data = dill.dumps(msg)
+            ip_pkt.data = udp_pkt.pack(ip_pkt)
         else:
             ip_pkt.data = dill.dumps(msg)
 
@@ -117,19 +113,14 @@ def process_packet(ethernet):
         trace_msg = ip_pkt.data
 
         if ip_pkt.protocol == constants.TCP:
-            # TCP and UDP are not yet supported
-            # transport = TCP()
-            # transport.parse(ethernet.data.value, offset)
-            # offset += transport.length
-            # trace_msg = transport.data
-            trace_msg = ip_pkt.data
+            transport = TCP()
+            transport.unpack(ip_pkt.data)
+            trace_msg = transport.data
 
-        if ip_pkt.protocol == constants.UDP:
-            # transport = UDP()
-            # transport.parse(ethernet.data.value, offset)
-            # offset += transport.length
-            # trace_msg = transport.data
-            trace_msg = ip_pkt.data
+        elif ip_pkt.protocol == constants.UDP:
+            transport = UDP()
+            transport.unpack(ip_pkt.data)
+            trace_msg = transport.data
 
     return trace_msg
 
@@ -157,7 +148,7 @@ def _create_ethernet_frame(trace_entries, color):
     return ethernet
 
 
-def _create_ip_packet(trace_entries):
+def _create_ip_packet(trace_entries) -> IPv4:
     """ Create an IP packet using TraceEntries
 
     Args:
@@ -173,7 +164,7 @@ def _create_ip_packet(trace_entries):
     return ip_pkt
 
 
-def _create_tcp_packet(trace_entries):
+def _create_tcp_packet(trace_entries) -> TCP:
     """ Create a TCP packet using TraceEntries (FUTURE)
 
     Args:
@@ -181,10 +172,13 @@ def _create_tcp_packet(trace_entries):
     Returns:
         tcp packet
     """
-    return trace_entries
+    tcp_pkt = TCP()
+    tcp_pkt.source_p = trace_entries.tp_src
+    tcp_pkt.destination_p = trace_entries.tp_dst
+    return tcp_pkt
 
 
-def _create_udp_packet(trace_entries):
+def _create_udp_packet(trace_entries) -> UDP:
     """ Create an UDP datagram using TraceEntries (FUTURE)
 
     Args:
@@ -192,7 +186,10 @@ def _create_udp_packet(trace_entries):
     Returns:
         tcp message
     """
-    return trace_entries
+    udp_pkt = UDP()
+    udp_pkt.source_p = trace_entries.tp_src
+    udp_pkt.destination_p = trace_entries.tp_dst
+    return udp_pkt
 
 
 def _get_node_color_from_dpid(dpid):
