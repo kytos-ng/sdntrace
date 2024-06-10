@@ -3,48 +3,58 @@
     <k-accordion>
       <k-accordion-item title="Single Trace">
         <k-context-panel v-if="is_empty" title="Empty Result" icon="gear">
-          </k-context-panel>
-            <div v-else class="data_table">
-              <table>
-                <thead>
-                  <tr>
-                    <th rowspan="2">Trace ID</th>
-                    <th rowspan="2">DPID</th>
-                    <th rowspan="2">Time</th>
-                    <th rowspan="2">Type</th>
-                    <th rowspan="2">Port</th>
-                </thead>
-                <tbody>
-                  <tr v-for="(item, index) in trace_results">
-                    <td>{{updateId}}</td>
-                    <td>{{item.dpid}}</td>
-                    <td>{{item.time}}</td>
-                    <td>{{item.type}}</td>
-                    <td>{{item.port}}</td>             
-                  </tr>
-                </tbody>
-            </table>
-          </div>
-        </k-accordion-item>
-        <k-accordion>          
-          <div>
-          <k-button icon="search" title="Fetch Trace" :on_click="fetchTrace"></k-button>
-          </div>
-        </k-accordion>
-        <k-accordion>          
-          <div>
-          <k-button icon="search" title="View All Traces" :on_click="get_all_traces"></k-button>
-          </div>
-        </k-accordion>
+        </k-context-panel>
+        <div v-else class="data_table">
+          <table>
+            <thead>
+              <tr>
+                <th rowspan="2">Trace ID</th>
+                <th rowspan="2">DPID</th>
+                <th rowspan="2">Time</th>
+                <th rowspan="2">Type</th>
+                <th rowspan="2">Port</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in trace_results">
+                <td>{{updateId}}</td>
+                <td>{{item.dpid}}</td>
+                <td>{{item.time}}</td>
+                <td>{{item.type}}</td>
+                <td>{{item.port}}</td>             
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </k-accordion-item>
+      <k-accordion>
+        <div>
+        <k-button icon="search" title="Fetch Trace" @click="fetchTrace"></k-button>
+        </div>
+      </k-accordion>
+      <k-accordion>          
+        <div>
+        <k-button icon="search" title="View All Traces" @click="get_all_traces"></k-button>
+        </div>
+      </k-accordion>
     </k-accordion>
   </div>
 </template>
 
 <script>
- module.exports = {
-   props: ["content"],
-   methods: {
-    get_data(){
+module.exports = {
+  props: ["content"],
+  data () {
+    return {
+      trace_results: {},
+      is_empty: false,
+      traceId: "",
+      updateId: "",
+      trace: {}
+    }
+  },
+  methods: {
+    get_data: function() {
       if (this.content){
         if (this.content.result){
           this.is_empty = false
@@ -58,9 +68,8 @@
         }
       }
       else {
-          this.is_empty = true
+        this.is_empty = true
       }
-
     },
     fetchTrace() {
         var self = this;
@@ -68,7 +77,7 @@
             async: true,
             dataType: "json",
             type: "GET", 
-            url: `${this.$kytos_server_api}amlight/sdntrace/trace/${this.traceId}`,
+            url: `${this.$kytos_server_api}amlight/sdntrace/v1/trace/${this.traceId}`,
             success: function(response) {
             self.trace_results = response.result; 
             self.updateId = response.request_id;
@@ -91,7 +100,7 @@
         dataType: "json",
         type: "GET",
         contentType: "application/json",
-        url: this.$kytos_server_api + "amlight/sdntrace/trace",
+        url: this.$kytos_server_api + "amlight/sdntrace/v1/trace",
       });
 
       request.done(function(data) {
@@ -105,11 +114,11 @@
           title: 'Bad request',
           description: data.status + ': ' + data.responseJSON.description
         };
-        self.$kytos.$emit("setNotification", notification);
+        self.$kytos.eventBus.$emit("setNotification", notification);
       });
     },
     
-    show_traces() {
+    show_traces: function() {
       var content = {
         "component": 'amlight-sdntrace-k-info-panel-show_all_traces',
         "content": this.trace,
@@ -118,11 +127,11 @@
         "title": "Trace",
         "subtitle": "by amlight/sdntrace"
       }
-      this.$kytos.$emit("showInfoPanel", content)
+      this.$kytos.eventBus.$emit("showInfoPanel", content)
     },
     
-    get_topology(){
-      var self = this
+    get_topology: function() {
+      var self = this;
       $.ajax({
         async: true,
         dataType: "json",
@@ -133,10 +142,10 @@
           self.links = data['topology']['links']
         }
       });
-    } 
+    }
   },
   watch: {
-    content: function() {
+    content(value, oldValue) {
       this.get_data();
     }
   },
@@ -145,21 +154,12 @@
     $('.k-info-panel:has(.sdntrace_container)').addClass('sdntrace-k-info-panel');
   },
   mounted() {
-    this.$parent.$el.style.width = "calc(100% - 300px)";
+    //this.$parent.$el.style.width = "calc(100% - 300px)";
   },
-  destroyed() {
+  unmounted() {
     $('.k-info-panel').removeClass('sdntrace_container-k-info-panel');
   },
-   data () {
-     return {
-      trace_results: {},
-      is_empty: false,
-      traceId: "",
-      updateId: "",
-      trace: {}
-     }
-   }
- }
+}
 </script>
 <style>
 .sdntrace-k-info-panel {

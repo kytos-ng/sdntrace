@@ -3,57 +3,64 @@
     <k-accordion>
       <k-accordion-item title="Trace Results">
         <k-context-panel v-if="is_empty" title="Empty Result" icon="gear">
-          </k-context-panel>
-            <div v-else class="data_table" style="max-height: 90%;">
-              <table>
-                <thead>
-                  <tr>
-                    <th rowspan="2">Trace ID</th>
-                    <th rowspan="2">DPID</th>
-                    <th rowspan="2">Time</th>
-                    <th rowspan="2">Type</th>
-                    <th rowspan="2">Port</th>               
-                  </tr>
-                </thead>
-                <tbody>
-                  <template v-for="(item, index) in trace_results">
-                    <tr v-for="(results_item, results_index) in item.result" :key="results_index">
-                      <td>{{ item.request_id }}</td>
-                      <td>{{ results_item.dpid }}</td>
-                      <td>{{ results_item.time }}</td>
-                      <td>{{ results_item.type }}</td>
-                      <td>{{ results_item.port }}</td>
-                    </tr>
-                    <div>
-                      <k-button icon="search" title="View" :on_click="() => view_trace(item)"></k-button>
-                    </div>
-                  </template>
-                </tbody>
-            </table>
-          </div>
-        </k-accordion-item>
-        <k-accordion>          
-       
-        </k-accordion>
+        </k-context-panel>
+        <div v-else class="data_table" style="max-height: 90%;">
+          <table>
+            <thead>
+              <tr>
+                <th rowspan="2">Trace ID</th>
+                <th rowspan="2">DPID</th>
+                <th rowspan="2">Time</th>
+                <th rowspan="2">Type</th>
+                <th rowspan="2">Port</th>               
+              </tr>
+            </thead>
+            <tbody>
+              <template v-for="(item, index) in trace_results">
+                <tr v-for="(results_item, results_index) in item.result" :key="results_index">
+                  <td>{{ item.request_id }}</td>
+                  <td>{{ results_item.dpid }}</td>
+                  <td>{{ results_item.time }}</td>
+                  <td>{{ results_item.type }}</td>
+                  <td>{{ results_item.port }}</td>
+                </tr>
+                <div>
+                  <k-button icon="search" title="View" @click="() => view_trace(item)"></k-button>
+                </div>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </k-accordion-item>
+      <k-accordion>          
+      </k-accordion>
     </k-accordion>
   </div>
 </template>
 
 <script>
- module.exports = {
-   props: ["content"],
-   methods: {
-    get_data(){
-      if(Object.keys(this.content).length != 0){
-          this.is_empty = false
-          this.trace_results = this.content 
+module.exports = {
+  props: ["content"],
+
+  data () {
+     return {
+      trace_results: {},
+      is_empty: false,
+      traceId: ""
+     }
+  },
+  methods: {
+    get_data: function() {
+      if(typeof this.content !== 'undefined' && this.content && Object.keys(this.content).length != 0) {
+          this.is_empty = false;
+          this.trace_results = this.content;
       }
       else {
-          this.is_empty = true
+          this.is_empty = true;
       } 
     },
     
-    view_trace (trace) {
+    view_trace: function(trace) {
       var content = {
         "component": 'amlight-sdntrace-k-info-panel-show_trace_results',
         "content": trace,
@@ -62,7 +69,7 @@
         "title": "Trace",
         "subtitle": "by amlight/sdntrace"
       }
-      this.$kytos.$emit("showInfoPanel", content)
+      this.$kytos.eventBus.$emit("showInfoPanel", content);
     } 
   },
   watch: {
@@ -75,19 +82,12 @@
     $('.k-info-panel:has(.sdntrace_container)').addClass('sdntrace-k-info-panel');
   },
   mounted() {
-    this.$parent.$el.style.width = "calc(100% - 300px)";
+    //this.$parent.$el.style.width = "calc(100% - 300px)";
   },
-  destroyed() {
+  unmounted() {
     $('.k-info-panel').removeClass('sdntrace_container-k-info-panel');
   },
-   data () {
-     return {
-      trace_results: {},
-      is_empty: false,
-      traceId: ""
-     }
-   }
- }
+}
 </script>
 <style>
 .sdntrace-k-info-panel {

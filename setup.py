@@ -99,7 +99,7 @@ class Test(TestCommand):
 
     def run(self):
         """Run tests."""
-        cmd = f"python3 -m pytest tests/ {self.get_args()}"
+        cmd = f"python3 -m pytest tests/ --cov-report term-missing {self.get_args()}"
         try:
             check_call(cmd, shell=True)
         except CalledProcessError as exc:
@@ -115,7 +115,7 @@ class TestCoverage(Test):
 
     def run(self):
         """Run tests quietly and display coverage report."""
-        cmd = f"python3 -m pytest --cov=. tests/ {self.get_args()}"
+        cmd = f"python3 -m pytest --cov=. tests/ --cov-report term-missing {self.get_args()}"
         try:
             check_call(cmd, shell=True)
         except CalledProcessError as exc:
