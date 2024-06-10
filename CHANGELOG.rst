@@ -11,6 +11,7 @@ Changed
 - Updated python environment installation from 3.9 to 3.11
 - Updated test dependencies
 - Added versioning to API requests
+- Upgraded UI framework to Vue3 
 
 Added
 =====
