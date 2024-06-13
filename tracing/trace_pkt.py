@@ -85,9 +85,9 @@ def prepare_next_packet(trace_entries, result, event):
         in_port = event.message.in_port
         trace_entries.in_port = in_port
 
-    trace_entries.dl_vlan = _get_vlan_from_pkt(
-        event.content['message'].data.value)
-
+    vlan = _get_vlan_from_pkt(event.content['message'].data.value)
+    if vlan:
+        trace_entries.dl_vlan = vlan
     return trace_entries, color, switch
 
 
@@ -173,8 +173,8 @@ def _create_tcp_packet(trace_entries) -> TCP:
         tcp packet
     """
     tcp_pkt = TCP()
-    tcp_pkt.source_p = trace_entries.tp_src
-    tcp_pkt.destination_p = trace_entries.tp_dst
+    tcp_pkt.src_port = trace_entries.tp_src
+    tcp_pkt.dst_port = trace_entries.tp_dst
     return tcp_pkt
 
 
@@ -187,8 +187,8 @@ def _create_udp_packet(trace_entries) -> UDP:
         tcp message
     """
     udp_pkt = UDP()
-    udp_pkt.source_p = trace_entries.tp_src
-    udp_pkt.destination_p = trace_entries.tp_dst
+    udp_pkt.src_port = trace_entries.tp_src
+    udp_pkt.dst_port = trace_entries.tp_dst
     return udp_pkt
 
 
@@ -217,5 +217,7 @@ def _get_vlan_from_pkt(data):
     """
     ethernet = Ethernet()
     ethernet.unpack(data)
-    vlan = ethernet.vlans[0]
-    return vlan.vid
+    vlans = ethernet.vlans
+    if vlans:
+        return vlans[0].vid
+    return None
