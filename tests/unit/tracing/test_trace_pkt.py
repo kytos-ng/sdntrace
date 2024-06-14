@@ -67,11 +67,15 @@ class TestTracePkt:
 
         Switches(controller.switches)
 
-    def test_generate_trace_pkt_tcp(self):
+    @patch("napps.amlight.sdntrace.shared.extd_nw_types.randrange")
+    def test_generate_trace_pkt_tcp(self, mock_rand):
         """Test trace manager new trace creation."""
+        mock_rand.return_value = 0
         eth = {"dl_vlan": 100}
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
-        switch = {"switch": dpid, "eth": eth}
+        ip = {"nw_proto": 6}
+        tp = {"tp_src": 1, "tp_dst": 2}
+        switch = {"switch": dpid, "eth": eth, "ip": ip, "tp": tp}
         entries = {"trace": switch}
 
         trace_entries = TraceEntries()
@@ -87,13 +91,44 @@ class TestTracePkt:
         assert entries["trace"]["switch"]["in_port"] == in_port
         assert (
             pkt == b"\xca\xfe\xca\xfe\xca\xfe\xee\xee\xee\xee\xee"
-            b"\x01\x81\x00\x00d\x08\x00E\x00\x00p\x00\x00"
-            b"\x00\x00\xff\x00\xb7\x89\x01\x01\x01\x01\x01"
-            b"\x01\x01\x02\x80\x04\x95Q\x00\x00\x00\x00\x00"
-            b"\x00\x00\x8c(napps.amlight.sdntrace.tracing."
-            b"trace_msg\x94\x8c\x08TraceMsg\x94\x93\x94)"
-            b"\x81\x94}\x94\x8c\x0b_request_id\x94M\xe7"
-            b"\x03sb."
+            b"\x01\x81\x00\x00d\x08\x00E\x00\x00\x84\x00\x00\x00"
+            b"\x00\xff\x06\xb7o\x01\x01\x01\x01\x01\x01\x01\x02"
+            b"\x00\x01\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00P"
+            b"\x02\x00\x00\xb5\x9f\x00\x00\x80\x04\x95Q\x00\x00"
+            b"\x00\x00\x00\x00\x00\x8c(napps.amlight.sdntrace."
+            b"tracing.trace_msg\x94\x8c\x08TraceMsg\x94\x93\x94)"
+            b"\x81\x94}\x94\x8c\x0b_request_id\x94M\xe7\x03sb."
+        )
+
+    @patch("napps.amlight.sdntrace.shared.extd_nw_types.randrange")
+    def test_generate_trace_pkt_udp(self, mock_rand):
+        """Test trace manager new trace creation."""
+        mock_rand.return_value = 0
+        eth = {"dl_vlan": 100}
+        dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
+        ip = {"nw_proto": 17}
+        tp = {"tp_src": 1, "tp_dst": 2}
+        switch = {"switch": dpid, "eth": eth, "ip": ip, "tp": tp}
+        entries = {"trace": switch}
+
+        trace_entries = TraceEntries()
+        trace_entries.load_entries(entries)
+        r_id = 999
+
+        # Coloring REST response
+        color = {"color_value": "ee:ee:ee:ee:ee:01"}
+
+        # new_trace does not check duplicated request.
+        in_port, pkt = trace_pkt.generate_trace_pkt(trace_entries, color, r_id)
+        assert entries["trace"]["switch"]["in_port"] == in_port
+        assert (
+            pkt == b"\xca\xfe\xca\xfe\xca\xfe\xee\xee\xee\xee\xee"
+            b"\x01\x81\x00\x00d\x08\x00E\x00\x00x\x00\x00\x00\x00"
+            b"\xff\x11\xb7p\x01\x01\x01\x01\x01\x01\x01\x02\x00"
+            b"\x01\x00\x02\x00\x08\x05\x9b\x80\x04\x95Q\x00\x00"
+            b"\x00\x00\x00\x00\x00\x8c(napps.amlight.sdntrace.tracing."
+            b"trace_msg\x94\x8c\x08TraceMsg\x94\x93\x94)\x81\x94}\x94"
+            b"\x8c\x0b_request_id\x94M\xe7\x03sb."
         )
 
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
@@ -159,6 +194,53 @@ class TestTracePkt:
         trace_msg = trace_pkt.process_packet(ethernet)
         assert trace_msg == expected
 
+    def test_process_packet_tcp(self):
+        """Test process TCP packet to find the trace message."""
+        pkt = (
+            b"\xca\xfe\xca\xfe\xca\xfe\xee\xee\xee\xee\xee"
+            b"\x01\x81\x00\x00d\x08\x00E\x00\x00\x84\x00\x00\x00"
+            b"\x00\xff\x06\xb7o\x01\x01\x01\x01\x01\x01\x01\x02"
+            b"\x00\x01\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00P"
+            b"\x02\x00\x00\xb5\x9f\x00\x00\x80\x04\x95Q\x00\x00"
+            b"\x00\x00\x00\x00\x00\x8c(napps.amlight.sdntrace."
+            b"tracing.trace_msg\x94\x8c\x08TraceMsg\x94\x93\x94)"
+            b"\x81\x94}\x94\x8c\x0b_request_id\x94M\xe7\x03sb."
+        )
+        expected = (
+            b"\x80\x04\x95Q\x00\x00\x00\x00\x00"
+            b"\x00\x00\x8c(napps.amlight.sdntrace.tracing."
+            b"trace_msg\x94\x8c\x08TraceMsg\x94\x93\x94)"
+            b"\x81\x94}\x94\x8c\x0b_request_id\x94M\xe7"
+            b"\x03sb."
+        )
+        ethernet = Ethernet()
+        ethernet.unpack(pkt)
+        trace_msg = trace_pkt.process_packet(ethernet)
+        assert trace_msg == expected
+
+    def test_process_packet_udp(self):
+        """Test process UDP packet to find the trace message."""
+        pkt = (
+            b"\xca\xfe\xca\xfe\xca\xfe\xee\xee\xee\xee\xee"
+            b"\x01\x81\x00\x00d\x08\x00E\x00\x00x\x00\x00\x00\x00"
+            b"\xff\x11\xb7p\x01\x01\x01\x01\x01\x01\x01\x02\x00"
+            b"\x01\x00\x02\x00\x08\x05\x9b\x80\x04\x95Q\x00\x00"
+            b"\x00\x00\x00\x00\x00\x8c(napps.amlight.sdntrace.tracing."
+            b"trace_msg\x94\x8c\x08TraceMsg\x94\x93\x94)\x81\x94}\x94"
+            b"\x8c\x0b_request_id\x94M\xe7\x03sb."
+        )
+        expected = (
+            b"\x80\x04\x95Q\x00\x00\x00\x00\x00"
+            b"\x00\x00\x8c(napps.amlight.sdntrace.tracing."
+            b"trace_msg\x94\x8c\x08TraceMsg\x94\x93\x94)"
+            b"\x81\x94}\x94\x8c\x0b_request_id\x94M\xe7"
+            b"\x03sb."
+        )
+        ethernet = Ethernet()
+        ethernet.unpack(pkt)
+        trace_msg = trace_pkt.process_packet(ethernet)
+        assert trace_msg == expected
+
     @patch("napps.amlight.sdntrace.tracing.trace_pkt._get_node_color_from_dpid")
     def test_prepare_next_packet(self, mock_get_color):
         """Test trace prepare next packet."""
@@ -209,3 +291,44 @@ class TestTracePkt:
         assert result[0] == trace_entries
         assert result[1] == mock_get_color()[1]
         assert result[2].dpid == color_switch.dpid
+
+    @patch("napps.amlight.sdntrace.tracing.trace_pkt._get_node_color_from_dpid")
+    def test_prepare_next_packet_no_vlan(self, mock_get_color):
+        """Test trace prepare next packet."""
+        color_switch = MagicMock()
+        color_switch.dpid = "00:00:00:00:00:00:00:01"
+        mock_get_color.return_value = [color_switch, "ee:ee:ee:ee:ee:01"]
+        ip = {"nw_src": "0.0.0.1", "nw_dst": "0.0.0.2", "nw_tos": 5, "nw_proto": 6}
+        tp = {"tp_src": 1, "tp_dst": 2}
+        dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
+        switch = {"switch": dpid, "ip": ip, "tp": tp}
+        entries = {"trace": switch}
+
+        trace_entries = TraceEntries()
+        trace_entries.load_entries(entries)
+
+        raw = (
+            b"\xca\xfe\xca\xfe\xca\xfe\xee\xee\xee\xee\xee"
+            b"\x01\x08\x00E\x14\x00\x84\x00\x00\x00\x00\xff"
+            b"\x06\xbb]\x00\x00\x00\x01\x00\x00\x00\x02\x00"
+            b"\x01\x00\x02\x19,Jh\x00\x00\x00\x00P\x02\x00"
+            b"\x00\xe4\xbd\x00\x00\x80\x04\x95Q\x00\x00\x00"
+            b"\x00\x00\x00\x00\x8c(napps.amlight.sdntrace."
+            b"tracing.trace_msg\x94\x8c\x08TraceMsg\x94\x93"
+            b"\x94)\x81\x94}\x94\x8c\x0b_request_id\x94M6usb."
+        )
+
+        packet_in_msg = MagicMock()
+        packet_in_msg.data.value = raw
+        packet_in_msg.in_port.value = 1
+        packet_in_msg.header.version = 1
+
+        event = MagicMock()
+        event.source.switch = "00:00:00:00:00:00:00:02"
+        event.content = {"message": packet_in_msg}
+
+        result = {"dpid": "00:00:00:00:00:00:00:01"}
+
+        result = trace_pkt.prepare_next_packet(trace_entries, result, event)
+
+        assert result[0].dl_vlan == 0

@@ -352,6 +352,11 @@ class TraceEntries(object):
             if 'nw_tos' in ip_:
                 self.nw_tos = ip_['nw_tos']
 
+            if 'nw_proto' in ip_:
+                self.nw_proto = ip_['nw_proto']
+                if 'tp' not in trace:
+                    raise ValueError("Error: tp not provided")
+
         # Basic entries['trace']['ip']
         if 'tp' in trace:
             tp_ = trace['tp']

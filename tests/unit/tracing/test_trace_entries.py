@@ -521,3 +521,12 @@ class TestLoadEntries:
         assert self.trace_entries.dl_vlan == eth["dl_vlan"]
         assert self.trace_entries.dpid == dpid["dpid"]
         assert self.trace_entries.in_port == dpid["in_port"]
+
+    def test_proto_missing_tp(self):
+        """Test missing tp when nw_proto is present"""
+        dpid = {"dpid": "a", "in_port": 1}
+        ip = {"nw_proto": 6}
+        switch = {"switch": dpid, "ip": ip}
+        entries = {"trace": switch}
+        with pytest.raises(ValueError):
+            self.trace_entries.load_entries(entries)
