@@ -354,7 +354,7 @@ class TraceEntries(object):
 
             if 'nw_proto' in ip_:
                 self.nw_proto = ip_['nw_proto']
-                if 'tp' not in trace:
+                if ((ip_['nw_proto'] == 17 or ip_['nw_proto'] == 6) and 'tp' not in trace):
                     raise ValueError("Error: tp not provided")
 
         # Basic entries['trace']['ip']

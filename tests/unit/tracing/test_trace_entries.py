@@ -530,3 +530,12 @@ class TestLoadEntries:
         entries = {"trace": switch}
         with pytest.raises(ValueError):
             self.trace_entries.load_entries(entries)
+
+    def test_proto_without_tp(self):
+        """Test define proto without needing tp"""
+        dpid = {"dpid": "a", "in_port": 1}
+        ip = {"nw_proto": 1}
+        switch = {"switch": dpid, "ip": ip}
+        entries = {"trace": switch}
+        self.trace_entries.load_entries(entries)
+        assert self.trace_entries.nw_proto == ip["nw_proto"]
