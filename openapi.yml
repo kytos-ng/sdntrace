@@ -67,7 +67,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: '#/components/schemas/TransactionProgram'
+                  - $ref: '#/components/schemas/TransportProtocol'
                   - type: object
                     properties:
                       msg:  # This property will show only error messages
@@ -169,7 +169,7 @@ components:
             ip:
               $ref: '#/components/schemas/InternetProtocol'
             tp:
-              $ref: '#/components/schemas/TransactionProgram'
+              $ref: '#/components/schemas/TransportProtocol'
     Switch: # Can be referenced via '#/components/schemas/Switch'
       type: object
       required:
@@ -215,7 +215,7 @@ components:
         nw_proto:
           type: integer
           format: int32
-    TransactionProgram: # Can be referenced via '#/components/schemas/TransactionProgram'
+    TransportProtocol: # Can be referenced via '#/components/schemas/TransportProtocol'
       type: object
       properties:
         tp_src:
