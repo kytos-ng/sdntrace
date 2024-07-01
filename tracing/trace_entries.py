@@ -2,7 +2,7 @@
     Class Entries. Used to evaluate entries provided.
 """
 import re
-
+from napps.amlight.sdntrace import constants
 
 DPID_ADDR = re.compile('([0-9A-Fa-f]{2}[-:]){7}[0-9A-Fa-f]{2}$')
 MAC_ADDR = re.compile('([0-9A-Fa-f]{2}[-:]){5}[0-9A-Fa-f]{2}$')
@@ -354,7 +354,8 @@ class TraceEntries(object):
 
             if 'nw_proto' in ip_:
                 self.nw_proto = ip_['nw_proto']
-                if ((ip_['nw_proto'] == 17 or ip_['nw_proto'] == 6) and 'tp' not in trace):
+                if ((ip_['nw_proto'] == constants.UDP or ip_['nw_proto'] == constants.TCP)
+                     and 'tp' not in trace):
                     raise ValueError("Error: tp not provided")
 
         # Basic entries['trace']['ip']
