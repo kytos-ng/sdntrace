@@ -126,6 +126,7 @@ class TestMain:
         """Test get_stats"""
         mock_thread.return_value = True
         traces_n = 99
+        self.napp.tracing.stop_traces()
         traces_running = {"mock": "request"}
         queue_request = {"mock1": "trace1", "mock2": "trace2"}
         queue_result = {"mock": "result"}

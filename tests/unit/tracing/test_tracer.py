@@ -7,15 +7,9 @@ import pytest
 from napps.amlight.sdntrace.tracing.trace_msg import TraceMsg
 from napps.amlight.sdntrace.tracing.trace_manager import TraceManager
 from napps.amlight.sdntrace.tracing.tracer import TracePath
-from napps.amlight.sdntrace.shared.switches import Switches
 from napps.amlight.sdntrace.tracing.rest import FormatRest
 
-from kytos.lib.helpers import (
-    get_interface_mock,
-    get_link_mock,
-    get_switch_mock,
-    get_controller_mock,
-)
+from kytos.lib.helpers import get_controller_mock
 
 
 # pylint: disable=too-many-public-methods, too-many-lines,
@@ -45,30 +39,7 @@ class TestTracePath:
 
     def setup_method(self):
         """Set up before each test method"""
-        self.create_basic_switches(get_controller_mock())
         self.trace_manager = TraceManager(controller=get_controller_mock())
-
-    @classmethod
-    def create_basic_switches(cls, controller):
-        """Create basic mock switches for Kytos controller."""
-        dpid_a = "00:00:00:00:00:00:00:01"
-        dpid_b = "00:00:00:00:00:00:00:02"
-
-        mock_switch_a = get_switch_mock(dpid_a, 0x04)
-        mock_switch_b = get_switch_mock(dpid_b, 0x04)
-        mock_interface_a = get_interface_mock("s1-eth1", 1, mock_switch_a)
-        mock_interface_b = get_interface_mock("s2-eth1", 1, mock_switch_b)
-
-        mock_link = get_link_mock(mock_interface_a, mock_interface_b)
-        mock_link.id = "cf0f4071be4"
-        mock_switch_a.id = dpid_a
-        mock_switch_a.as_dict.return_value = {"metadata": {}}
-        mock_switch_b.id = dpid_b
-        mock_switch_b.as_dict.return_value = {"metadata": {}}
-
-        controller.switches = {dpid_a: mock_switch_a, dpid_b: mock_switch_b}
-
-        Switches(controller.switches)
 
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     @patch("napps.amlight.sdntrace.shared.colors.Colors._get_colors")

@@ -65,7 +65,7 @@ class TestTracePkt:
 
         controller.switches = {dpid_a: mock_switch_a, dpid_b: mock_switch_b}
 
-        Switches(controller.switches)
+        Switches(MagicMock())._switches = controller.switches
 
     @patch("napps.amlight.sdntrace.shared.extd_nw_types.randrange")
     def test_generate_trace_pkt_tcp(self, mock_rand):
