@@ -20,8 +20,8 @@ class TestTCP:
         tcp_pk.seq = 11111
         tcp_pk.window = 43690
         tcp_pk.data = b"mocked"
-        expected_pack = b"\x00\x01\x00\x02\x00\x00+g\x00\x00"
-        expected_pack += b"\x00\x00P\x02\xaa\xaaz$\x00\x00mocked"
+        expected_pack = b"\x00\x01\x00\x02\x00\x00+g\x00\x00\x00"
+        expected_pack += b"\x00P\x02\xaa\xaa\xa5\x85\x00\x00mocked"
         actual_pack = tcp_pk.pack(ip_pk)
         assert expected_pack == actual_pack
 
@@ -55,9 +55,8 @@ class TestTCP:
         tcp_pk.seq = 11111
         tcp_pk.window = 43690
         tcp_pk.pack(ip_pk)
-        assert tcp_pk.checksum == 45155
+        assert tcp_pk.checksum == 56266
 
-        # Currently data does not count for length
         prev_length = tcp_pk.length
         tcp_pk.data = b"mocked"
         tcp_pk.pack()
@@ -84,7 +83,7 @@ class TestUDP:
         upd_pk.src_port = 1
         upd_pk.dst_port = 2
         upd_pk.data = b"mocked"
-        expected_pack = b"\x00\x01\x00\x02\x00\x08\xcb\x98mocked"
+        expected_pack = b"\x00\x01\x00\x02\x00\x0e\xcb\x8cmocked"
         assert upd_pk.pack(ip_pk) == expected_pack
 
     def test_udp_unpack(self):
@@ -113,7 +112,7 @@ class TestUDP:
         udp_pk.dst_port = 2
         udp_pk.data = b"mocked"
         udp_pk.pack(ip_pk)
-        assert udp_pk.checksum == 52120
+        assert udp_pk.checksum == 52108
 
     def test_udp_value_by_16_bits(self):
         """Test _value_by_16_bits"""
