@@ -6,10 +6,12 @@ All notable changes to the sdntrace NApp will be documented in this file.
 [UNRELEASED] - Under development
 ********************************
 
+[2024.1.0] - 2024-07-23
+***********************
+
 Changed
 =======
 - Updated python environment installation from 3.9 to 3.11
-- Updated test dependencies
 - Added versioning to API requests
 - Upgraded UI framework to Vue3 
 
