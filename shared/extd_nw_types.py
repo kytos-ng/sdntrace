@@ -27,7 +27,7 @@ class TCP(GenericStruct):
     data = BinaryData()
 
     def __init__(self, src_port=0, dst_port=0, seq=0, ack=0, length=5,
-                 flags=2, window=0, checksum=0, urgent_pointer=0, options=b'', data=b''):
+                 flags=2, window=83, checksum=0, urgent_pointer=0, options=b'', data=b''):
         """
         These default values are considering this TCP message is first sent, initiating
          handshake.
@@ -65,9 +65,9 @@ class TCP(GenericStruct):
             +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
             |                    Acknowledgment Number                      |
             +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-            |  Data |           |U|A|P|R|S|F|                               |
-            | Offset| Reserved  |R|C|S|S|Y|I|            Window             |
-            |       |           |G|K|H|T|N|N|                               |
+            |  Data |     |A|C|E|U|A|P|R|S|F|                               |
+            | Offset| RSV |C|W|C|R|C|S|S|Y|I|            Window             |
+            |       |     |C|R|H|G|K|H|T|N|N|                               |
             +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
             |           Checksum            |         Urgent Pointer        |
             +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -100,14 +100,11 @@ class TCP(GenericStruct):
     def _update_checksum(self, ip_header:Union[IPv4, IPv6]=None):
         """Update the packet checksum to enable integrity check.
          Each addend is 16 bits."""
-        # TODO: Overflown data in practice (91 bytes).
-        #       Lenght currently is not accurate
-        # self.length = 5 + (len(self.options) // 4) + (len(self.data) // 4)
-        self.length = 5 + (len(self.options) // 4) + 0
+        self.length = 5 + (len(self.options) // 4)
         self._length_flags = self.length << 12 | self.flags
 
-        sequence_hex = hex(self.seq)[2:]
-        acknowledgment_hex = hex(self.ack)[2:]
+        sequence_hex = f'{self.seq:08x}'
+        acknowledgment_hex = f'{self.ack:08x}'
         sequence_upper = int(sequence_hex[:4] or '0', 16)
         sequence_lower = int(sequence_hex[-4:] or '0', 16)
         acknowledgment_upper = int(acknowledgment_hex[:4] or '0', 16)
@@ -122,7 +119,7 @@ class TCP(GenericStruct):
             destination_upper = (destination_list[0] << 8) + destination_list[1]
             destination_lower = (destination_list[2] << 8) + destination_list[3]
             ip_value = (source_upper + source_lower + destination_upper +
-                        destination_lower + ip_header.protocol + (self.length * 4))
+                        destination_lower + ip_header.protocol + (self.length * 4) + len(self.data))
         else:
             # TODO: Implement IPv6 header analysis
             ip_value = 0
@@ -233,9 +230,7 @@ class UDP(GenericStruct):
     def _update_checksum(self, ip_header:Union[IPv4, IPv6]=None):
         """Update the packet checksum to enable integrity check.
          Each addend is 16 bits."""
-        # TODO: Length does not include data length
-        # self.length = 8 + len(self.data)
-        self.length = 8 + 0
+        self.length = 8 + len(self.data)
 
         if isinstance(ip_header, IPv4):
             source_list = [int(octet) for octet in ip_header.source.split(".")]
