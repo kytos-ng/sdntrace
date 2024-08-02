@@ -42,7 +42,14 @@
               <k-input icon="arrow-right" title="nw_src:" placeholder="nw_src" v-model:value="ip.nw_src">{{ ip.nw_src }}</k-input>
               <k-input icon="arrow-right" title="nw_dst:" placeholder="nw_dst" v-model:value="ip.nw_dst">{{ ip.nw_dst }}</k-input>
             </k-accordion-item>
+            <k-input icon="arrow-right" title="nw_proto:" placeholder="nw_proto" v-model:value="ip.nw_proto">{{ ip.nw_proto }}</k-input>
+            <k-input icon="arrow-right" title="nw_tos:" placeholder="nw_tos" v-model:value="ip.nw_tos">{{ ip.nw_tos }}</k-input>
           </k-accordion-item>
+
+          <k-accordion-item title="TP Parameters">
+            <k-input icon="arrow-right" title="tp_src:" placeholder="tp_src" v-model:value="tp.tp_src">{{ tp.tp_src }}</k-input>
+            <k-input icon="arrow-right" title="tp_dst:" placeholder="tp_dst" v-model:value="tp.tp_dst">{{ tp.tp_dst }}</k-input>
+          </k-accordion-item>   
             
           <div >
             <k-button icon="search" title="Start Trace" @click="start_trace">
@@ -89,8 +96,14 @@ module.exports = {
           },
         ip: {
             "nw_src": "",
-            "nw_dst": ""
-        }
+            "nw_dst": "",
+            "nw_proto": "",
+            "nw_tos": ""
+        },
+      tp: {
+        "tp_src": "",
+        "tp_dst": ""
+      }
     }
   },
   methods: {
@@ -110,8 +123,14 @@ module.exports = {
           },
           ip: {
             "nw_src": self.ip.nw_src,
-            "nw_dst": self.ip.nw_dst
-          }
+            "nw_dst": self.ip.nw_dst,
+            "nw_proto": parseInt(self.ip.nw_proto) || "",
+            "nw_tos": parseInt(self.ip.nw_tos) || ""
+          },
+          tp: {
+              "tp_src": parseInt(self.tp.tp_src) || "",
+              "tp_dst": parseInt(self.tp.tp_dst) || ""
+            }
         }
       }
            
@@ -119,6 +138,9 @@ module.exports = {
                                                                                         return (v != "");
                                                                                         }));
       payload.trace.ip = Object.fromEntries(Object.entries(payload.trace.ip).filter(function ([k, v]) {
+                                                                                        return (v != "");
+                                                                                        }));
+      payload.trace.tp = Object.fromEntries(Object.entries(payload.trace.tp).filter(function ([k, v]) {
                                                                                         return (v != "");
                                                                                         }));
       if (Object.values(payload.trace.eth).every(value => value === "")) {
@@ -242,6 +264,10 @@ module.exports = {
       this.eth.dl_dst = ""
       this.ip.nw_src = ""
       this.ip.nw_dst = ""
+      this.ip.nw_proto = ""
+      this.ip.nw_tos = ""
+      this.tp.tp_src = ""
+      this.tp.tp_dst = ""
       this.traceId = ""
     }
   },
