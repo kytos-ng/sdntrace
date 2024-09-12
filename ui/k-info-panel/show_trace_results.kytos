@@ -77,11 +77,19 @@ module.exports = {
             async: true,
             dataType: "json",
             type: "GET", 
-            url: `${this.$kytos_server_api}amlight/sdntrace/v1/trace/${this.traceId}`,
+            url: `${self.$kytos_server_api}amlight/sdntrace/v1/trace/${self.traceId}`,
             success: function(response) {
-            self.trace_results = response.result; 
-            self.updateId = response.request_id;
-            self.is_empty = !self.trace_results.length; 
+              if (response?.msg) {
+                let notification = {
+                icon: 'gear',
+                title: 'Trace in progress...'
+                };
+                self.$kytos.eventBus.$emit("setNotification", notification);
+              } else {
+                self.trace_results = response.result; 
+                self.updateId = response.request_id;
+                self.is_empty = !self.trace_results.length; 
+              }
             },
             error: function() { 
               self.is_empty = true;
