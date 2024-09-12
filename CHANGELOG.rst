@@ -6,6 +6,13 @@ All notable changes to the sdntrace NApp will be documented in this file.
 [UNRELEASED] - Under development
 ********************************
 
+[2024.1.1] - 2024-09-12
+***********************
+
+Fixed
+=====
+- Fixed bug when fetching an in progress trace
+
 [2024.1.0] - 2024-07-23
 ***********************
 
