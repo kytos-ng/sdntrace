@@ -6,6 +6,12 @@ All notable changes to the sdntrace NApp will be documented in this file.
 [UNRELEASED] - Under development
 ********************************
 
+[2023.2.0] - 2024-10-03
+***********************
+
+No major changes since the last release.
+
+
 [2023.1.0] - 2023-06-06
 ***********************
 
