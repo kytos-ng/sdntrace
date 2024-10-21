@@ -287,21 +287,23 @@ module.exports = {
     },
       
     get_ports: function() {
-      current_dpid = this.dpid
-      current_switch = this.switches[current_dpid]
-      var port_numbers = []
-      if (current_switch != undefined && current_switch != "") {
-        $.each(current_switch.interfaces, function(key, value) {
-          if (value.metadata.port_name != undefined && value.metadata.port_name != "") {
-            port_numbers.push(`${value.metadata.port_name} - ${value.port_number}`)
-          } else {
-            port_numbers.push(`${value.name} - ${value.port_number}`)
-          }
-        });
-      } else {
-        port_numbers.push("No DPID Choosen")
+      if (this.dpid != undefined && this.dpid != "") {
+        current_dpid = this.dpid
+        current_switch = this.switches[current_dpid]
+        var port_numbers = []
+        if (current_switch != undefined && current_switch != "") {
+          $.each(current_switch.interfaces, function(key, value) {
+            if (value.metadata.port_name != undefined && value.metadata.port_name != "") {
+              port_numbers.push(`${value.metadata.port_name} - ${value.port_number}`)
+            } else {
+              port_numbers.push(`${value.name} - ${value.port_number}`)
+            }
+          });
+        } else {
+          port_numbers.push("No DPID Choosen")
+        }
+        this.port_numbers = port_numbers;
       }
-      this.port_numbers = port_numbers;
     },
       
     onblur_dpids: function() {
