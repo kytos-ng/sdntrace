@@ -288,8 +288,8 @@ module.exports = {
       
     get_ports: function() {
       if (this.dpid != undefined && this.dpid != "") {
-        current_dpid = this.dpid
-        current_switch = this.switches[current_dpid]
+        let current_dpid = this.dpid
+        let current_switch = this.switches[current_dpid]
         var port_numbers = []
         if (current_switch != undefined && current_switch != "") {
           $.each(current_switch.interfaces, function(key, value) {
