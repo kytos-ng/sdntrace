@@ -153,8 +153,10 @@ module.exports = {
     }
   },
   watch: {
-    content(value, oldValue) {
-      this.get_data();
+    content: {
+      handler: function (value, oldValue) {
+        this.get_data();
+      }
     }
   },
   created() {
