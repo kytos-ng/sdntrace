@@ -6,6 +6,14 @@ All notable changes to the sdntrace NApp will be documented in this file.
 [UNRELEASED] - Under development
 ********************************
 
+Changed
+=======
+- Updated watchers
+
+Added
+=====
+- Inputs used for display only were disabled
+
 [2024.1.1] - 2024-09-12
 ***********************
 

@@ -14,7 +14,7 @@
                           >{{ dpid }}
             </k-input-auto>
             
-            <k-input class="k-input interface-label" v-model:value="dpid_display" icon="none"
+            <k-input class="k-input interface-label" v-model:value="dpid_display" icon="none" :isDisabled="true"
                       >{{ dpid_display }}</k-input>
             
             <k-input-auto id="in_port" v-model:value="in_port"
@@ -26,7 +26,7 @@
                       >{{ in_port }}
             </k-input-auto>
             
-            <k-input class="k-input interface-label" v-model:value="port_name" icon="none"
+            <k-input class="k-input interface-label" v-model:value="port_name" icon="none" :isDisabled="true"
                       >{{ port_name }}</k-input>
           </k-accordion-item>
 
