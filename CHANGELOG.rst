@@ -9,6 +9,7 @@ All notable changes to the sdntrace NApp will be documented in this file.
 Changed
 =======
 - Updated watchers
+- Removed customClass
 
 Added
 =====
