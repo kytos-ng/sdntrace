@@ -35,7 +35,7 @@
             <k-input icon="arrow-right" title="dl_dst:" placeholder="dl_dst" v-model:value="eth.dl_dst" >{{ eth.dl_dst }}</k-input>
           </k-accordion-item>
           
-          <k-accordion-item  title="IP Parameters">
+          <k-accordion-item title="IP Parameters">
             <k-accordion-item title="IPV4">
               <k-input icon="arrow-right" title="nw_src:" placeholder="nw_src" v-model:value="ip.nw_src">{{ ip.nw_src }}</k-input>
               <k-input icon="arrow-right" title="nw_dst:" placeholder="nw_dst" v-model:value="ip.nw_dst">{{ ip.nw_dst }}</k-input>
