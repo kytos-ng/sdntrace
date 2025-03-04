@@ -14,6 +14,10 @@ Added
 =====
 - Inputs used for display only were disabled
 
+Fixed
+=====
+- Fixed the CSS for the ``k-input-auto``
+
 [2024.1.1] - 2024-09-12
 ***********************
 
