@@ -1,5 +1,5 @@
 <template>
-  <k-toolbar-item icon="map-marker" tooltip="Napp sdntrace">
+  <k-toolbar-item name="amlight-sdntrace-k-toolbar-main" icon="map-marker" tooltip="Napp sdntrace">
     <div class="scroll">
       <k-accordion>
         <k-accordion-item title="Trace">
