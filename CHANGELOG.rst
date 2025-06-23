@@ -6,6 +6,11 @@ All notable changes to the sdntrace NApp will be documented in this file.
 [UNRELEASED] - Under development
 ********************************
 
+Changed
+=======
+- Internal refactoring updating UI components to use ``pinia``
+
+
 [2025.1.0] - 2025-04-14
 ***********************
 
