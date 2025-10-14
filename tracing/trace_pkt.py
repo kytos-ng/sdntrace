@@ -59,7 +59,7 @@ def generate_trace_pkt(trace_entries, color, r_id):
     return trace_entries.in_port, pkt
 
 
-def prepare_next_packet(trace_entries, result, event):
+async def prepare_next_packet(trace_entries, result, event):
     """ Used to support VLAN translation. Currently, it does not
     support translation of other fields, such as MAC addresses.
 
@@ -74,7 +74,7 @@ def prepare_next_packet(trace_entries, result, event):
         switch: DPID
     """
     dpid = result['dpid']
-    switch, color = _get_node_color_from_dpid(dpid)
+    switch, color = await _get_node_color_from_dpid(dpid)
 
     trace_entries.dpid = dpid
 
@@ -191,8 +191,7 @@ def _create_udp_packet(trace_entries) -> UDP:
     udp_pkt.dst_port = trace_entries.tp_dst
     return udp_pkt
 
-
-def _get_node_color_from_dpid(dpid):
+async def _get_node_color_from_dpid(dpid):
     """ Get node color from Coloring Napp
 
     Args:
@@ -203,7 +202,7 @@ def _get_node_color_from_dpid(dpid):
     """
     for switch in Switches().get_switches():
         if dpid == switch.dpid:
-            return switch, Colors().get_switch_color(switch.dpid)
+            return switch, await Colors().aget_switch_color(switch.dpid, source="get_node_color")
     return 0, 0
 
 

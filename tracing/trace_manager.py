@@ -5,6 +5,7 @@
 
 import time
 import dill
+import asyncio
 from _thread import start_new_thread as new_thread
 
 from kytos.core import log
@@ -46,16 +47,30 @@ class TraceManager(object):
 
         self._is_tracing_running = True
 
-        # Thread to start traces
-        new_thread(self._run_traces, (settings.TRACE_INTERVAL,))
+        self.tasks: list[asyncio.Task] = []
+        self._async_loop = None
+        # To start traces
+        self.run_traces(settings.TRACE_INTERVAL)        
 
     def stop_traces(self):
         self._is_tracing_running = False
+        for task in self.tasks:
+            task.cancel()
 
     def is_tracing_running(self):
         return self._is_tracing_running
+    
+    def run_traces(self, trace_interval):
+        """
+        Create the task to search for traces _run_traces.
+        """
+        self._async_loop = asyncio.get_running_loop()
+        task = self._async_loop.create_task(
+            self._run_traces(trace_interval)
+        )
+        self.tasks.append(task)
 
-    def _run_traces(self, trace_interval):
+    async def _run_traces(self, trace_interval):
         """ Thread that will keep reading the self._request_queue
         queue looking for new trace requests to run.
 
@@ -70,7 +85,10 @@ class TraceManager(object):
                         if not self.limit_traces_reached():
                             entries = self._request_queue[req_id]
                             self._running_traces[req_id] = entries
-                            new_thread(self._spawn_trace, (req_id, entries,))
+                            task = self._async_loop.create_task(
+                                self._spawn_trace(req_id, entries)
+                            )
+                            self.tasks.append(task)
                             new_request_ids.append(req_id)
                         else:
                             break
@@ -80,9 +98,9 @@ class TraceManager(object):
                         del self._request_queue[rid]
                 except Exception as error:  # pylint: disable=broad-except
                     log.error("Trace Error: %s" % error)
-            time.sleep(trace_interval)
+            await asyncio.sleep(trace_interval)
 
-    def _spawn_trace(self, trace_id, trace_entries):
+    async def _spawn_trace(self, trace_id, trace_entries):
         """ Once a request is found by the run_traces method,
         instantiate a TracePath class and run the tracepath
 
@@ -90,9 +108,10 @@ class TraceManager(object):
             trace_id: trace request id
             trace_entries: TraceEntries class
         """
-        log.info("Creating thread to trace request id %s..." % trace_id)
+        
+        log.info("Creating task to trace request id %s..." % trace_id)
         tracer = TracePath(self, trace_id, trace_entries)
-        tracer.tracepath()
+        await tracer.tracepath()
 
         del self._running_traces[trace_id]
 

@@ -9,7 +9,11 @@ All notable changes to the sdntrace NApp will be documented in this file.
 Changed
 =======
 - Internal refactoring updating UI components to use ``pinia``
+- Busy waiting has been changed to asynchronous wait instead.
 
+Added
+=====
+- Added field to request when making a trace called ``timeout``. If present in the request, modifies the time to wait for a response of the packet out when tracing.
 
 [2025.1.0] - 2025-04-14
 ***********************

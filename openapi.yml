@@ -162,6 +162,8 @@ components:
           required:
           - switch
           properties:
+            timeout:
+              type: number
             switch:
               $ref: '#/components/schemas/Switch'
             eth:

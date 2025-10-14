@@ -24,8 +24,7 @@ def process_packet_in(event):
     log.error("Invalid OpenFlow version")
     return 0, 0, 0
 
-
-def send_packet_out(controller, switch, port, data):
+async def send_packet_out(controller, switch, port, data):
     """ Just prepare and send a PacketOut used by
     the Tracer.
 
@@ -39,7 +38,7 @@ def send_packet_out(controller, switch, port, data):
     of_version = switch.features.header.version
 
     if of_version.value == 4:
-        openflow13.send_packet_out(controller, switch, port, data)
+        await openflow13.send_packet_out(controller, switch, port, data)
     else:
         log.error("Invalid OpenFlow version")
         return
