@@ -202,7 +202,7 @@ async def _get_node_color_from_dpid(dpid):
     """
     for switch in Switches().get_switches():
         if dpid == switch.dpid:
-            return switch, await Colors().aget_switch_color(switch.dpid, source="get_node_color")
+            return switch, await Colors().aget_switch_color(switch.dpid)
     return 0, 0
 
 

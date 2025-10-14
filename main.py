@@ -22,8 +22,6 @@ At this moment, OpenFlow 1.3 is supported.
 """
 
 import pathlib
-import requests
-import json
 from kytos.core import log
 from napps.amlight.sdntrace import settings
 from napps.amlight.sdntrace.backends.of_parser import process_packet_in
@@ -33,7 +31,6 @@ from napps.amlight.sdntrace.tracing.trace_manager import TraceManager
 from kytos.core import KytosNApp, rest
 from kytos.core.helpers import listen_to, load_spec, validate_openapi
 from kytos.core.rest_api import JSONResponse, Request, get_json_or_400
-import threading
 
 class Main(KytosNApp):
     """Main class of amlight/sdntrace NApp.
@@ -58,26 +55,6 @@ class Main(KytosNApp):
 
         # Instantiate TraceManager
         self.tracing = TraceManager(self.controller)  # pylint: disable=W0201
-        self.lock = threading.Lock()
-        self.tasks = []
-
-    def cancel_them_all(self):
-        with self.lock:
-            for task in self.tasks:
-                task.cancel()
-            self.tasks = []
-
-    async def the_request(self):
-        result = requests.get(url=settings.COLORS_URL)
-        if result.status_code == 200:
-            result = json.loads(result.content)
-            log.info(f"RESULT? -> ", result)
-
-    def test_me(self):
-        import asyncio
-        loop = asyncio.get_running_loop()
-        task = loop.create_task(self.the_request())
-        self.tasks.append(task)
 
     def execute(self):
         """Kytos Napp execute method"""

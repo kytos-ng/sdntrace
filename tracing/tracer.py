@@ -72,7 +72,7 @@ class TracePath(object):
         log.warning("Starting Trace Path ID: %s" % self.id)
 
         entries = copy.deepcopy(self.init_entries)
-        color = await Colors().aget_switch_color(self.init_switch.dpid, source="tracepath")
+        color = await Colors().aget_switch_color(self.init_switch.dpid)
         switch = self.init_switch
         # Add initial trace step
         self.rest.add_trace_step(self.trace_result, trace_type='starting',
