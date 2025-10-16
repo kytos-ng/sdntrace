@@ -136,8 +136,9 @@ class TracePath(object):
         timeout_control = 0  # Controls the timeout of 1 second and two tries
 
         while True:
-            log.warning('Trace %s: Sending POut to switch: %s and in_port %s '
-                        % (self.id, switch.dpid, in_port))
+            log.warning(f'Trace {self.id}: Sending POut to switch:'
+                        f' {switch.dpid} and in_port {in_port}.'
+                        f' Timeout: {self.init_entries.timeout}')
             await send_packet_out(self.trace_mgr.controller,
                                    switch, in_port, probe_pkt)
             # Wait 0.5 second before querying for PacketIns

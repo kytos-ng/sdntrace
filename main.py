@@ -22,7 +22,7 @@ At this moment, OpenFlow 1.3 is supported.
 """
 
 import pathlib
-from kytos.core import log
+
 from napps.amlight.sdntrace import settings
 from napps.amlight.sdntrace.backends.of_parser import process_packet_in
 from napps.amlight.sdntrace.shared.switches import Switches
@@ -31,6 +31,7 @@ from napps.amlight.sdntrace.tracing.trace_manager import TraceManager
 from kytos.core import KytosNApp, rest
 from kytos.core.helpers import listen_to, load_spec, validate_openapi
 from kytos.core.rest_api import JSONResponse, Request, get_json_or_400
+
 
 class Main(KytosNApp):
     """Main class of amlight/sdntrace NApp.

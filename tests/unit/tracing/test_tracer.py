@@ -3,13 +3,13 @@
 """
 
 from unittest.mock import MagicMock, patch
+import time
 import pytest
 from napps.amlight.sdntrace.tracing.trace_msg import TraceMsg
 from napps.amlight.sdntrace.tracing.trace_manager import TraceManager
 from napps.amlight.sdntrace.tracing.tracer import TracePath
 from napps.amlight.sdntrace.tracing.rest import FormatRest
 from napps.amlight.sdntrace.shared.switches import Switches
-import time
 
 from kytos.lib.helpers import get_controller_mock
 
@@ -270,7 +270,7 @@ class TestTracePath:
         start_time = time.time()
         result = await tracer.send_trace_probe(switch_obj, in_port, probe_pkt)
         actual_time = time.time() - start_time
-        
+
         assert mock_send_packet_out.call_count == 3
         assert expected_time < actual_time, "Trace was too fast."
 
@@ -382,9 +382,7 @@ class TestTracePath:
 
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     @patch("napps.amlight.sdntrace.shared.switches.Switches.get_switch")
-    def test_check_loop_port_different(
-        self, mock_get_switch, mock_switch_colors
-    ):
+    def test_check_loop_port_different(self, mock_get_switch, mock_switch_colors):
         """Test check_loop with same switch and different port."""
         mock_switch_colors.return_value = "ee:ee:ee:ee:ee:01"
 
@@ -496,7 +494,10 @@ class TestTracePath:
     @patch("napps.amlight.sdntrace.shared.switches.Switches.get_switch")
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.send_trace_probe")
     async def test_tracepath_loop_timeout(
-        self, mock_probe, mock_get_switch, mock_switch_colors,
+        self,
+        mock_probe,
+        mock_get_switch,
+        mock_switch_colors,
     ):
         """Test tracepath loop method finishing with timeout."""
         mock_switch_colors.return_value = "ee:ee:ee:ee:ee:01"

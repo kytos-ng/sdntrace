@@ -58,6 +58,7 @@ class Colors(object):
             result = await client.get(self._url)
             if result.is_server_error or result.status_code >= 400:
                 log.error(f'Error ocurred when getting colors: {result.text}')
+                return
             result = result.json()
             self._colors = result['colors']
 

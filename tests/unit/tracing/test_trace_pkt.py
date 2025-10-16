@@ -131,22 +131,24 @@ class TestTracePkt:
             b"\x94\x8c\x0b_request_id\x94M\xe7\x03sb."
         )
 
-    @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
-    @patch("napps.amlight.sdntrace.shared.colors.Colors._get_colors")
-    def test_get_node_color_from_dpid(self, mock_color, mock_switch_colors):
+    @patch("napps.amlight.sdntrace.shared.colors.Colors.aget_switch_color")
+    async def test_get_node_color_from_dpid(self, mock_aswitch_colors):
         """Test get color from dpid."""
-        mock_switch_colors.return_value = "ee:ee:ee:ee:ee:01"
+        mock_aswitch_colors.return_value = "ee:ee:ee:ee:ee:01"
 
-        switch, color = trace_pkt._get_node_color_from_dpid("00:00:00:00:00:00:00:01")
+        switch, color = await trace_pkt._get_node_color_from_dpid(
+            "00:00:00:00:00:00:00:01"
+        )
 
         assert switch.dpid == "00:00:00:00:00:00:00:01"
         assert color == "ee:ee:ee:ee:ee:01"
-        mock_color.assert_called_once()
-        mock_switch_colors.assert_called_once()
+        mock_aswitch_colors.assert_called_once()
 
-    def test_get_node_color_unknown_dpid(self):
+    async def test_get_node_color_unknown_dpid(self):
         """Test get color from unknown dpid."""
-        switch, color = trace_pkt._get_node_color_from_dpid("99:99:99:99:99:99:99:99")
+        switch, color = await trace_pkt._get_node_color_from_dpid(
+            "99:99:99:99:99:99:99:99"
+        )
 
         assert switch == 0
         assert color == 0
@@ -242,7 +244,7 @@ class TestTracePkt:
         assert trace_msg == expected
 
     @patch("napps.amlight.sdntrace.tracing.trace_pkt._get_node_color_from_dpid")
-    def test_prepare_next_packet(self, mock_get_color):
+    async def test_prepare_next_packet(self, mock_get_color):
         """Test trace prepare next packet."""
         color_switch = MagicMock()
         color_switch.dpid = "00:00:00:00:00:00:00:01"
@@ -286,14 +288,13 @@ class TestTracePkt:
         result = {"dpid": pkt_in["dpid"], "port": pkt_in["in_port"]}
 
         # result = [result_trace, result_color, result_switch]
-        result = trace_pkt.prepare_next_packet(trace_entries, result, event)
-
+        result = await trace_pkt.prepare_next_packet(trace_entries, result, event)
         assert result[0] == trace_entries
-        assert result[1] == mock_get_color()[1]
+        assert result[1] == (await mock_get_color())[1]
         assert result[2].dpid == color_switch.dpid
 
     @patch("napps.amlight.sdntrace.tracing.trace_pkt._get_node_color_from_dpid")
-    def test_prepare_next_packet_no_vlan(self, mock_get_color):
+    async def test_prepare_next_packet_no_vlan(self, mock_get_color):
         """Test trace prepare next packet."""
         color_switch = MagicMock()
         color_switch.dpid = "00:00:00:00:00:00:00:01"
@@ -329,6 +330,6 @@ class TestTracePkt:
 
         result = {"dpid": "00:00:00:00:00:00:00:01"}
 
-        result = trace_pkt.prepare_next_packet(trace_entries, result, event)
+        result = await trace_pkt.prepare_next_packet(trace_entries, result, event)
 
         assert result[0].dl_vlan == 0

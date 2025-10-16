@@ -10,6 +10,7 @@ Changed
 =======
 - Internal refactoring updating UI components to use ``pinia``
 - Busy waiting has been changed to asynchronous wait instead.
+- Removed ``requests``, using ``httpx`` to send requests.
 
 Added
 =====

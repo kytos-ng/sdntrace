@@ -521,6 +521,20 @@ class TestLoadEntries:
         assert self.trace_entries.dl_vlan == eth["dl_vlan"]
         assert self.trace_entries.dpid == dpid["dpid"]
         assert self.trace_entries.in_port == dpid["in_port"]
+        assert self.trace_entries.timeout == 0.5
+
+    def test_timeout(self):
+        """Test different timeout from default."""
+        timeout = 5
+        eth = {"dl_vlan": 100}
+        dpid = {"dpid": "a", "in_port": 1}
+        switch = {"switch": dpid, "eth": eth, "timeout": timeout}
+        entries = {"trace": switch}
+        self.trace_entries.load_entries(entries)
+        assert self.trace_entries.dl_vlan == eth["dl_vlan"]
+        assert self.trace_entries.dpid == dpid["dpid"]
+        assert self.trace_entries.in_port == dpid["in_port"]
+        assert self.trace_entries.timeout == timeout
 
     def test_proto_missing_tp(self):
         """Test missing tp when nw_proto is present"""

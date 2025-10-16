@@ -62,7 +62,7 @@ class TestOFParser:
         mock_of13_packet_in.assert_not_called()
 
     @patch("napps.amlight.sdntrace.backends.openflow13.send_packet_out")
-    def test_process_of13_packet_out_patched(self, mock_of13_packet_out):
+    async def test_process_of13_packet_out_patched(self, mock_of13_packet_out):
         """Test process packet out for openflow13."""
         controller = MagicMock()
         switch = MagicMock()
@@ -71,12 +71,12 @@ class TestOFParser:
         port = MagicMock()
         data = MagicMock()
 
-        send_packet_out(controller, switch, port, data)
+        await send_packet_out(controller, switch, port, data)
 
         mock_of13_packet_out.assert_called_once()
 
     @patch("napps.amlight.sdntrace.backends.openflow13.send_packet_out")
-    def test_process_packet_out_error(self, mock_of13_packet_out):
+    async def test_process_packet_out_error(self, mock_of13_packet_out):
         """Test process packet out for openflow13."""
         controller = MagicMock()
         switch = MagicMock()
@@ -85,6 +85,6 @@ class TestOFParser:
         port = MagicMock()
         data = MagicMock()
 
-        send_packet_out(controller, switch, port, data)
+        await send_packet_out(controller, switch, port, data)
 
         mock_of13_packet_out.assert_not_called()

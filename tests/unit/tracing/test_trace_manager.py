@@ -2,8 +2,8 @@
     Test tracing.trace_manager
 """
 
-import time
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
+import asyncio
 import pytest
 
 from napps.amlight.sdntrace import settings
@@ -46,11 +46,26 @@ class TestTraceManager:
     def setup_method(self):
         """Set up before each test method"""
         self.create_basic_switches(get_controller_mock())
+        TraceManager.run_traces = MagicMock()
         self.trace_manager = TraceManager(controller=get_controller_mock())
 
     def teardown_method(self) -> None:
         """Clean up after each test method"""
         self.trace_manager.stop_traces()
+
+    @pytest.fixture
+    async def run_traces(self):
+        """Run task to discover traces."""
+        _async_loop = asyncio.get_running_loop()
+        self.trace_manager._async_loop = _async_loop
+        task = _async_loop.create_task(self.trace_manager._run_traces(0.5))
+        self.trace_manager.tasks.append(task)
+        yield
+
+        # Clean tasks
+        for _task in self.trace_manager.tasks:
+            if not _task.done():
+                _task.cancel()
 
     @classmethod
     def create_basic_switches(cls, controller):
@@ -201,21 +216,27 @@ class TestTraceManager:
 
     def test_trace_in_process(self):
         """Test trace manager in process."""
-        self.trace_manager._spawn_trace = MagicMock()
+        self.trace_manager._spawn_trace = AsyncMock()
         trace_id = 30001
         self.trace_manager._running_traces[trace_id] = {}
         result = self.trace_manager.get_result(trace_id)
         assert result == {"msg": "trace in process"}
 
+    # pylint: disable=unused-argument, too-many-locals
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
+    @patch("napps.amlight.sdntrace.shared.colors.Colors.aget_switch_color")
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.send_trace_probe")
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.tracepath_loop")
-    def test_get_result(self, mock_trace_loop, mock_send_probe, mock_colors):
+    async def test_get_result(
+        self, mock_trace_loop, mock_send_probe, mock_colors, mock_acolors, run_traces
+    ):
         """Test tracemanager tracing request and resultS."""
-        mock_colors.return_value = {
+        colors = {
             "color_field": "dl_src",
             "color_value": "ee:ee:ee:ee:ee:01",
         }
+        mock_colors.return_value = colors
+        mock_acolors.return_value = colors
         mock_send_probe.return_value = {
             "dpid": "00:00:00:00:00:00:00:01",
             "port": 1,
@@ -224,7 +245,7 @@ class TestTraceManager:
 
         eth = {"dl_vlan": 100}
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
-        switch = {"switch": dpid, "eth": eth}
+        switch = {"switch": dpid, "eth": eth, "timeout": 0.1}
         entries = {"trace": switch}
 
         trace_entries = self.trace_manager.is_entry_valid(entries)
@@ -236,7 +257,7 @@ class TestTraceManager:
         while pending == 1:
             result = self.trace_manager.get_result(trace_id)
             pending = self.trace_manager.number_pending_requests()
-            time.sleep(0.1)
+            await asyncio.sleep(0.1)
             count += 1
             if count > 30:
                 pytest.fail("Timeout waiting to start processing trace")
@@ -247,7 +268,7 @@ class TestTraceManager:
         # Waiting thread to process the request
         while "msg" in result and result["msg"] == "trace in process":
             result = self.trace_manager.get_result(trace_id)
-            time.sleep(0.1)
+            await asyncio.sleep(0.1)
             count += 1
             if count > 30:
                 pytest.fail("Timeout waiting to process trace")
@@ -324,7 +345,7 @@ class TestTraceManager:
         assert is_limit
 
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.tracepath")
-    def test_spawn_trace(self, mock_tracepath):
+    async def test_spawn_trace(self, mock_tracepath):
         """Test spawn trace."""
         # mock_tracepath
         trace_id = 0
@@ -332,7 +353,7 @@ class TestTraceManager:
 
         self.trace_manager._running_traces[0] = 9999
 
-        self.trace_manager._spawn_trace(trace_id, trace_entries)
+        await self.trace_manager._spawn_trace(trace_id, trace_entries)
 
         mock_tracepath.assert_called_once()
         assert len(self.trace_manager._running_traces) == 0
@@ -341,22 +362,9 @@ class TestTraceManager:
 class TestTraceManagerTheadTest:
     """Now, load all entries at once"""
 
-    @pytest.fixture(autouse=True)
-    def commomn_patches(self, request):
-        """This function handles setup and cleanup for patches"""
-        patcher = patch("kytos.core.helpers.run_on_thread", lambda x: x)
-        mock_patch = patcher.start()
-
-        _ = request.function.__name__
-
-        def cleanup():
-            patcher.stop()
-
-        request.addfinalizer(cleanup)
-        return mock_patch
-
     def setup_method(self):
         """Set up before each test method"""
+        TraceManager.run_traces = MagicMock()
         self.trace_manager = TraceManager(controller=get_controller_mock())
         self.trace_manager.stop_traces()
 
@@ -373,8 +381,9 @@ class TestTraceManagerTheadTest:
     @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.send_trace_probe")
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.tracepath_loop")
-    def test_run_traces(self, mock_trace_loop, mock_send_probe, mock_colors):
+    async def test_run_traces(self, mock_trace_loop, mock_send_probe, mock_colors):
         """Test tracemanager tracing request and results."""
+        self.trace_manager._async_loop = asyncio.get_running_loop()
         mock_colors.return_value = {
             "color_field": "dl_src",
             "color_value": "ee:ee:ee:ee:ee:01",
@@ -397,7 +406,7 @@ class TestTraceManagerTheadTest:
         with patch.object(
             TraceManager, "is_tracing_running", side_effect=self.run_trace_once
         ):
-            self.trace_manager._run_traces(0.5)
+            await self.trace_manager._run_traces(0.5)
 
         assert len(self.trace_manager._request_queue) == 0
         assert self.trace_manager.number_pending_requests() == 0
