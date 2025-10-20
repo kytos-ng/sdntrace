@@ -60,12 +60,12 @@ class Main(KytosNApp):
     def execute(self):
         """Kytos Napp execute method"""
 
-    def shutdown(self):
+    async def shutdown(self):
         """Execute when your napp is unloaded.
 
         If you have some cleanup procedure, insert it here.
         """
-        self.tracing.stop_traces()
+        await self.tracing.stop_traces()
 
     @listen_to("kytos/of_core.v0x04.messages.in.ofpt_packet_in")
     def handle_packet_in(self, event):

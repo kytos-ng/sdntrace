@@ -52,10 +52,11 @@ class TraceManager(object):
         # To start traces
         self.run_traces(settings.TRACE_INTERVAL)        
 
-    def stop_traces(self):
+    async def stop_traces(self):
         self._is_tracing_running = False
         for task in self.tasks:
             task.cancel()
+            await task
 
     def is_tracing_running(self):
         return self._is_tracing_running
@@ -77,28 +78,31 @@ class TraceManager(object):
         Args:
             trace_interval = sleeping time
         """
-        while self.is_tracing_running():
-            if self.number_pending_requests() > 0:
-                try:
-                    new_request_ids = []
-                    for req_id in self._request_queue.copy():
-                        if not self.limit_traces_reached():
-                            entries = self._request_queue[req_id]
-                            self._running_traces[req_id] = entries
-                            task = self._async_loop.create_task(
-                                self._spawn_trace(req_id, entries)
-                            )
-                            self.tasks.append(task)
-                            new_request_ids.append(req_id)
-                        else:
-                            break
-                    # After starting traces for new requests,
-                    # remove them from self._request_queue
-                    for rid in new_request_ids:
-                        del self._request_queue[rid]
-                except Exception as error:  # pylint: disable=broad-except
-                    log.error("Trace Error: %s" % error)
-            await asyncio.sleep(trace_interval)
+        try:
+            while self.is_tracing_running():
+                if self.number_pending_requests() > 0:
+                    try:
+                        new_request_ids = []
+                        for req_id in self._request_queue.copy():
+                            if not self.limit_traces_reached():
+                                entries = self._request_queue[req_id]
+                                self._running_traces[req_id] = entries
+                                task = self._async_loop.create_task(
+                                    self._spawn_trace(req_id, entries)
+                                )
+                                self.tasks.append(task)
+                                new_request_ids.append(req_id)
+                            else:
+                                break
+                        # After starting traces for new requests,
+                        # remove them from self._request_queue
+                        for rid in new_request_ids:
+                            del self._request_queue[rid]
+                    except Exception as error:  # pylint: disable=broad-except
+                        log.error("Trace Error: %s" % error)
+                await asyncio.sleep(trace_interval)
+        except asyncio.CancelledError as err:
+            log.warning("sdntrace is cancelling trace loopk up.")
 
     async def _spawn_trace(self, trace_id, trace_entries):
         """ Once a request is found by the run_traces method,

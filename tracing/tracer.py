@@ -134,40 +134,42 @@ class TracePath(object):
             {switch & port}
         """
         timeout_control = 0  # Controls the timeout of 1 second and two tries
+        try:
+            while True:
+                log.warning(f'Trace {self.id}: Sending POut to switch:'
+                            f' {switch.dpid} and in_port {in_port}.'
+                            f' Timeout: {self.init_entries.timeout}')
+                await send_packet_out(self.trace_mgr.controller,
+                                       switch, in_port, probe_pkt)
+                # Wait 0.5 second before querying for PacketIns
+                # 0.5 is by default if it was not specified otherwise through request
+                await asyncio.sleep(self.init_entries.timeout)
+                timeout_control += 1
 
-        while True:
-            log.warning(f'Trace {self.id}: Sending POut to switch:'
-                        f' {switch.dpid} and in_port {in_port}.'
-                        f' Timeout: {self.init_entries.timeout}')
-            await send_packet_out(self.trace_mgr.controller,
-                                   switch, in_port, probe_pkt)
-            # Wait 0.5 second before querying for PacketIns
-            # 0.5 is by default if it was not specified otherwise through request
-            await asyncio.sleep(self.init_entries.timeout)
-            timeout_control += 1
+                if timeout_control >= 3:
+                    return 'timeout', False
 
-            if timeout_control >= 3:
-                return 'timeout', False
+                # Check if there is any Probe PacketIn in the queue
+                for pkt_in_msg in self.trace_mgr.trace_pkt_in:
+                    # Let's look for traces with our self.id
+                    # Each entry has the following format:
+                    # {"dpid": pkt_in_dpid, "in_port": pkt_in_port,
+                    #  "msg": msg, "ethernet": ethernet, "event": event}
+                    # packetIn_data_request_id is the request id
+                    # of the packetIn.data.
 
-            # Check if there is any Probe PacketIn in the queue
-            for pkt_in_msg in self.trace_mgr.trace_pkt_in:
-                # Let's look for traces with our self.id
-                # Each entry has the following format:
-                # {"dpid": pkt_in_dpid, "in_port": pkt_in_port,
-                #  "msg": msg, "ethernet": ethernet, "event": event}
-                # packetIn_data_request_id is the request id
-                # of the packetIn.data.
-
-                msg = pkt_in_msg["msg"]
-                if self.id == msg.request_id:
-                    self.clear_trace_pkt_in()
-                    result = {"dpid": pkt_in_msg["dpid"],
-                              "port": pkt_in_msg["in_port"]}
-                    return result, pkt_in_msg["event"]
-                else:
-                    log.warning('Trace %s: Sending PacketOut Again' % self.id)
-                    await send_packet_out(self.trace_mgr.controller,
-                                           switch, in_port, probe_pkt)
+                    msg = pkt_in_msg["msg"]
+                    if self.id == msg.request_id:
+                        self.clear_trace_pkt_in()
+                        result = {"dpid": pkt_in_msg["dpid"],
+                                  "port": pkt_in_msg["in_port"]}
+                        return result, pkt_in_msg["event"]
+                    else:
+                        log.warning('Trace %s: Sending PacketOut Again' % self.id)
+                        await send_packet_out(self.trace_mgr.controller,
+                                               switch, in_port, probe_pkt)
+        except asyncio.CancelledError:
+            log.warning(f"Trace {self.id} is getting cancelled.")
 
     def clear_trace_pkt_in(self):
         """ Once the probe PacketIn was processed, delete it from queue """
