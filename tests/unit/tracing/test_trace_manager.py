@@ -59,11 +59,11 @@ class TestTraceManager:
         _async_loop = asyncio.get_running_loop()
         self.trace_manager._async_loop = _async_loop
         task = _async_loop.create_task(self.trace_manager._run_traces(0.5))
-        self.trace_manager.tasks.append(task)
+        self.trace_manager.controller._tasks.append(task)
         yield
 
         # Clean tasks
-        for _task in self.trace_manager.tasks:
+        for _task in self.trace_manager.controller._tasks:
             if not _task.done():
                 _task.cancel()
 

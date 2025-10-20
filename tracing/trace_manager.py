@@ -47,16 +47,12 @@ class TraceManager(object):
 
         self._is_tracing_running = True
 
-        self.tasks: list[asyncio.Task] = []
         self._async_loop = None
         # To start traces
         self.run_traces(settings.TRACE_INTERVAL)        
 
-    async def stop_traces(self):
+    def stop_traces(self):
         self._is_tracing_running = False
-        for task in self.tasks:
-            task.cancel()
-            await task
 
     def is_tracing_running(self):
         return self._is_tracing_running
@@ -69,7 +65,7 @@ class TraceManager(object):
         task = self._async_loop.create_task(
             self._run_traces(trace_interval)
         )
-        self.tasks.append(task)
+        self.controller._tasks.append(task)
 
     async def _run_traces(self, trace_interval):
         """ Thread that will keep reading the self._request_queue
@@ -90,7 +86,7 @@ class TraceManager(object):
                                 task = self._async_loop.create_task(
                                     self._spawn_trace(req_id, entries)
                                 )
-                                self.tasks.append(task)
+                                self.controller._tasks.append(task)
                                 new_request_ids.append(req_id)
                             else:
                                 break
