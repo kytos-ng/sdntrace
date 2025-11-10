@@ -7,6 +7,7 @@ import time
 import dill
 import asyncio
 from _thread import start_new_thread as new_thread
+from collections import defaultdict
 
 from kytos.core import log
 from napps.amlight.sdntrace import settings
@@ -35,7 +36,8 @@ class TraceManager(object):
         self._id = 30000
 
         # Trace queues
-        self._request_queue = dict()
+        self._request_dict = dict()
+        self._request_queue = asyncio.Queue()
         self._results_queue = dict()
         self._running_traces = dict()
 
@@ -43,64 +45,58 @@ class TraceManager(object):
         self._total_traces_requested = 0
 
         # PacketIn queue with Probes
-        self.trace_pkt_in = []
+        self._trace_pkt_in = defaultdict(asyncio.Queue)
 
         self._is_tracing_running = True
 
         self._async_loop = None
+        self.traces_queue = asyncio.Queue()
         # To start traces
-        self.run_traces(settings.TRACE_INTERVAL)        
+        self.task_run_traces = None
+        self.run_traces()
 
     def stop_traces(self):
         self._is_tracing_running = False
+        if self.task_run_traces:
+            self.task_run_traces.cancel()
+        for trace_path_obj in self._running_traces.values():
+            trace_path_obj.trace_ended = True
+            trace_path_obj.trace_task.cancel()
+            # TODO: wait for task cancellation
+            # await trace_path_obj.trace_task
 
     def is_tracing_running(self):
         return self._is_tracing_running
-    
-    def run_traces(self, trace_interval):
+
+    def run_traces(self):
         """
         Create the task to search for traces _run_traces.
         """
         self._async_loop = asyncio.get_running_loop()
-        task = self._async_loop.create_task(
-            self._run_traces(trace_interval)
+        self.task_run_traces = self._async_loop.create_task(
+            self._run_traces()
         )
-        self.controller._tasks.append(task)
 
-    async def _run_traces(self, trace_interval):
-        """ Thread that will keep reading the self._request_queue
+    async def _run_traces(self):
+        """ Thread that will keep reading the self._request_dict
         queue looking for new trace requests to run.
-
-        Args:
-            trace_interval = sleeping time
         """
         try:
             while self.is_tracing_running():
-                if self.number_pending_requests() > 0:
-                    try:
-                        new_request_ids = []
-                        for req_id in self._request_queue.copy():
-                            if not self.limit_traces_reached():
-                                entries = self._request_queue[req_id]
-                                self._running_traces[req_id] = entries
-                                task = self._async_loop.create_task(
-                                    self._spawn_trace(req_id, entries)
-                                )
-                                self.controller._tasks.append(task)
-                                new_request_ids.append(req_id)
-                            else:
-                                break
+                try:
+                    if not self.limit_traces_reached():
+                        request_id = await self._request_queue.get()
+                        entries = self._request_dict[request_id]
+                        self._spawn_trace(request_id, entries)
                         # After starting traces for new requests,
-                        # remove them from self._request_queue
-                        for rid in new_request_ids:
-                            del self._request_queue[rid]
-                    except Exception as error:  # pylint: disable=broad-except
-                        log.error("Trace Error: %s" % error)
-                await asyncio.sleep(trace_interval)
-        except asyncio.CancelledError as err:
+                        # remove them from self._request_dict
+                        del self._request_dict[request_id]
+                except Exception as error:  # pylint: disable=broad-except
+                    log.error("Trace Error: %s" % error)
+        except asyncio.CancelledError:
             log.warning("sdntrace is cancelling trace loopk up.")
 
-    async def _spawn_trace(self, trace_id, trace_entries):
+    def _spawn_trace(self, trace_id, trace_entries):
         """ Once a request is found by the run_traces method,
         instantiate a TracePath class and run the tracepath
 
@@ -111,9 +107,12 @@ class TraceManager(object):
         
         log.info("Creating task to trace request id %s..." % trace_id)
         tracer = TracePath(self, trace_id, trace_entries)
-        await tracer.tracepath()
 
-        del self._running_traces[trace_id]
+        self._running_traces[trace_id] = tracer
+        task = self._async_loop.create_task(
+            tracer.tracepath()
+        )
+        tracer.trace_task = task
 
     def add_result(self, trace_id, result):
         """Used to save trace results to self._results_queue
@@ -123,6 +122,7 @@ class TraceManager(object):
             result: trace result generated using tracer
         """
         self._results_queue[trace_id] = result
+        del self._running_traces[trace_id]
 
     def avoid_duplicated_request(self, entries):
         """Verify if any of the requested queries has the same entries.
@@ -134,13 +134,13 @@ class TraceManager(object):
             True: if exists a similar request
             False: otherwise
         """
-        for request in self._request_queue.copy():
-            if entries == self._request_queue[request]:
+        for request in self._request_dict.copy():
+            if entries == self._request_dict[request]:
                 return True
         return False
 
     @staticmethod
-    def is_entry_valid(entries):
+    async def is_entry_valid(entries):
         """ This method validates all params provided, including
         if the switch/dpid requested exists.
 
@@ -159,7 +159,7 @@ class TraceManager(object):
         init_switch = Switches().get_switch(trace_entries.dpid)
         if isinstance(init_switch, bool):
             return "Unknown Switch"
-        color = Colors().get_switch_color(init_switch.dpid)
+        color = await Colors().aget_switch_color(init_switch.dpid)
 
         if len(color) == 0:
             return "Switch not Colored"
@@ -191,7 +191,7 @@ class TraceManager(object):
         except (ValueError, KeyError):
             if trace_id in self._running_traces:
                 return {'msg': 'trace in process'}
-            elif trace_id in self._request_queue:
+            elif trace_id in self._request_dict:
                 return {'msg': 'trace pending'}
             return {'msg': 'unknown trace id'}
 
@@ -217,7 +217,7 @@ class TraceManager(object):
             return True
         return False
 
-    def new_trace(self, trace_entries):
+    async def new_trace(self, trace_entries):
         """Receives external requests for traces.
 
         Args:
@@ -229,7 +229,8 @@ class TraceManager(object):
         trace_id = self.get_id()
 
         # Add to request_queue
-        self._request_queue[trace_id] = trace_entries
+        self._request_dict[trace_id] = trace_entries
+        await self._request_queue.put(trace_id)
 
         # Statistics
         self._total_traces_requested += 1
@@ -240,11 +241,11 @@ class TraceManager(object):
         """Used to check if there are entries to be traced
 
         Returns:
-            length of self._request_queue
+            length of self._request_dict
         """
-        return len(self._request_queue)
+        return len(self._request_dict)
 
-    def queue_probe_packet(self, event, ethernet, in_port, switch):
+    async def queue_probe_packet(self, event, ethernet, in_port, switch):
         """Used by sdntrace.packet_in_handler. Only tracing probes
         get to this point. Adds the PacketIn msg received to the
         trace_pkt_in queue.
@@ -262,13 +263,15 @@ class TraceManager(object):
         pkt_in["msg"] = dill.loads(process_packet(ethernet))
         pkt_in["ethernet"] = ethernet
         pkt_in["event"] = event
+        request_id = pkt_in['msg'].request_id
 
-        # This queue stores all PacketIn message received
-        self.trace_pkt_in.append(pkt_in)
+        if request_id not in self._results_queue:
+            # This queue stores all PacketIn message received
+            await self._trace_pkt_in[request_id].put(pkt_in)
 
     # REST calls
 
-    def rest_new_trace(self, entries):
+    async def rest_new_trace(self, entries: dict):
         """Used for the REST PUT call
 
         Args:
@@ -278,7 +281,7 @@ class TraceManager(object):
             Error msg if entries has invalid data
         """
         result = dict()
-        trace_entries = self.is_entry_valid(entries)
+        trace_entries = await self.is_entry_valid(entries)
         if not isinstance(trace_entries, TraceEntries):
             result['result'] = {'error': trace_entries}
             return result
@@ -287,7 +290,7 @@ class TraceManager(object):
             result['result'] = {'error': "Duplicated Trace Request ignored"}
             return result
 
-        trace_id = self.new_trace(trace_entries)
+        trace_id = await self.new_trace(trace_entries)
         result['result'] = {'trace_id': trace_id}
         return result
 
@@ -320,7 +323,7 @@ class TraceManager(object):
         stats = dict()
         stats['number_of_requests'] = self._total_traces_requested
         stats['number_of_running_traces'] = len(self._running_traces)
-        stats['number_of_pending_traces'] = len(self._request_queue)
+        stats['number_of_pending_traces'] = len(self._request_dict)
         stats['list_of_pending_traces'] = self._results_queue
 
         return stats

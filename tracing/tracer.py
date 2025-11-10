@@ -43,9 +43,13 @@ class TracePath(object):
         self.id = r_id
         self.init_entries = initial_entries
 
+        self.trace_task = None
+        self.step = 0
+        self.queue_packet_in = asyncio.Queue()
         self.trace_result = []
         self.trace_ended = False
         self.init_switch = self.get_init_switch()
+        self.loop = asyncio.get_event_loop()
         self.rest = FormatRest()
 
     def get_init_switch(self):
@@ -70,26 +74,29 @@ class TracePath(object):
                 originated the PacketIn. Repeat till reaching timeout
         """
         log.warning("Starting Trace Path ID: %s" % self.id)
+        try:
+            entries = copy.deepcopy(self.init_entries)
+            color = await Colors().aget_switch_color(self.init_switch.dpid)
+            switch = self.init_switch
+            # Add initial trace step
+            self.rest.add_trace_step(self.trace_result, trace_type='starting',
+                                     dpid=switch.dpid,
+                                     port=entries.in_port)
 
-        entries = copy.deepcopy(self.init_entries)
-        color = await Colors().aget_switch_color(self.init_switch.dpid)
-        switch = self.init_switch
-        # Add initial trace step
-        self.rest.add_trace_step(self.trace_result, trace_type='starting',
-                                 dpid=switch.dpid,
-                                 port=entries.in_port)
+            # A loop waiting for 'trace_ended'.
+            # It changes to True when reaches timeout
+            await self.tracepath_loop(entries, color, switch)
+            # Add final result to trace_results_queue
+            t_result = {"request_id": self.id,
+                        "result": self.trace_result,
+                        "start_time": str(self.rest.start_time),
+                        "total_time": self.rest.get_time(),
+                        "request": self.init_entries.init_entries}
 
-        # A loop waiting for 'trace_ended'.
-        # It changes to True when reaches timeout
-        await self.tracepath_loop(entries, color, switch)
-        # Add final result to trace_results_queue
-        t_result = {"request_id": self.id,
-                    "result": self.trace_result,
-                    "start_time": str(self.rest.start_time),
-                    "total_time": self.rest.get_time(),
-                    "request": self.init_entries.init_entries}
-
-        self.trace_mgr.add_result(self.id, t_result)
+            self.trace_mgr.add_result(self.id, t_result)
+            self.clear_trace_pkt_in()
+        except asyncio.CancelledError:
+            log.warning(f"Trace {self.id} is getting cancelled.")
 
     async def tracepath_loop(self, entries, color, switch):
         """ This method sends the packet_out per hop, create the result
@@ -98,9 +105,10 @@ class TracePath(object):
         # A loop waiting for 'trace_ended'.
         # It changes to True when reaches timeout
         while not self.trace_ended:
-            in_port, probe_pkt = generate_trace_pkt(entries, color, self.id)
+            in_port, probe_pkt = generate_trace_pkt(entries, color, self.id, self.step)
             result, packet_in = await self.send_trace_probe(switch, in_port,
                                                             probe_pkt)
+            self.step += 1
             if result == 'timeout':
                 self.rest.add_trace_step(self.trace_result, trace_type='last')
                 log.warning("Trace %s: Trace Completed!" % self.id)
@@ -134,50 +142,43 @@ class TracePath(object):
             {switch & port}
         """
         timeout_control = 0  # Controls the timeout of 1 second and two tries
-        try:
-            while True:
-                log.warning(f'Trace {self.id}: Sending POut to switch:'
-                            f' {switch.dpid} and in_port {in_port}.'
-                            f' Timeout: {self.init_entries.timeout}')
-                await send_packet_out(self.trace_mgr.controller,
-                                       switch, in_port, probe_pkt)
-                # Wait 0.5 second before querying for PacketIns
-                # 0.5 is by default if it was not specified otherwise through request
-                await asyncio.sleep(self.init_entries.timeout)
-                timeout_control += 1
+        while not self.trace_ended:
+            log.warning(f'Trace {self.id}: Sending POut to switch:'
+                        f' {switch.dpid} and in_port {in_port}.'
+                        f' Timeout: {self.init_entries.timeout}')
+            await send_packet_out(self.trace_mgr.controller,
+                                   switch, in_port, probe_pkt)
 
-                if timeout_control >= 3:
-                    return 'timeout', False
+            try:
+                pkt_in_msg = await asyncio.wait_for(
+                    self.get_packet_in(), timeout=self.init_entries.timeout
+                )
+            except asyncio.TimeoutError:
+                pkt_in_msg = None
 
-                # Check if there is any Probe PacketIn in the queue
-                for pkt_in_msg in self.trace_mgr.trace_pkt_in:
-                    # Let's look for traces with our self.id
-                    # Each entry has the following format:
-                    # {"dpid": pkt_in_dpid, "in_port": pkt_in_port,
-                    #  "msg": msg, "ethernet": ethernet, "event": event}
-                    # packetIn_data_request_id is the request id
-                    # of the packetIn.data.
+            if pkt_in_msg:
+                result = {"dpid": pkt_in_msg["dpid"],
+                          "port": pkt_in_msg["in_port"]}
+                return result, pkt_in_msg["event"]
 
-                    msg = pkt_in_msg["msg"]
-                    if self.id == msg.request_id:
-                        self.clear_trace_pkt_in()
-                        result = {"dpid": pkt_in_msg["dpid"],
-                                  "port": pkt_in_msg["in_port"]}
-                        return result, pkt_in_msg["event"]
-                    else:
-                        log.warning('Trace %s: Sending PacketOut Again' % self.id)
-                        await send_packet_out(self.trace_mgr.controller,
-                                               switch, in_port, probe_pkt)
-        except asyncio.CancelledError:
-            log.warning(f"Trace {self.id} is getting cancelled.")
+            timeout_control += 1
+            if timeout_control >= 3:
+                return 'timeout', False
+
+    async def get_packet_in(self):
+        """Wait for a PacketIn and verify if it is from the correct step."""
+        while not self.trace_ended:
+            pkt_in_msg = await self.trace_mgr._trace_pkt_in[self.id].get()
+            msg = pkt_in_msg["msg"]
+            if msg.step == self.step:
+                return pkt_in_msg
 
     def clear_trace_pkt_in(self):
-        """ Once the probe PacketIn was processed, delete it from queue """
+        """ Once the probe PacketIn was processed, delete it from queue."""
 
-        for pkt_in_msg in self.trace_mgr.trace_pkt_in[:]:
-            msg = pkt_in_msg["msg"]
-            if self.id == msg.request_id:
-                self.trace_mgr.trace_pkt_in.remove(pkt_in_msg)
+        # TODO: Use asyncio.Queue.shutdown() also. Python 3.13
+        # self.trace_mgr._trace_pkt_in[self.id].shutdown(immediate=True)
+        del self.trace_mgr._trace_pkt_in[self.id]
 
     def check_loop(self):
         """ Check if there are equal entries
