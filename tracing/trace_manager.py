@@ -3,11 +3,12 @@
 """
 
 
-import time
 import dill
-import asyncio
+import time
+from janus import Queue
 from _thread import start_new_thread as new_thread
 from collections import defaultdict
+from typing import Optional
 
 from kytos.core import log
 from napps.amlight.sdntrace import settings
@@ -16,6 +17,7 @@ from napps.amlight.sdntrace.shared.colors import Colors
 from napps.amlight.sdntrace.tracing.tracer import TracePath
 from napps.amlight.sdntrace.tracing.trace_pkt import process_packet
 from napps.amlight.sdntrace.tracing.trace_entries import TraceEntries
+from napps.amlight.sdntrace.tracing.trace_msg import TraceMsg
 
 
 class TraceManager(object):
@@ -37,33 +39,30 @@ class TraceManager(object):
 
         # Trace queues
         self._request_dict = dict()
-        self._request_queue = asyncio.Queue()
+        self._request_queue = None
         self._results_queue = dict()
-        self._running_traces = dict()
+        self._running_traces:dict[int, TraceEntries] = dict()
 
         # Counters
         self._total_traces_requested = 0
 
         # PacketIn queue with Probes
-        self._trace_pkt_in = defaultdict(asyncio.Queue)
+        self._trace_pkt_in = defaultdict(Queue)
 
-        self._is_tracing_running = True
+        self._is_tracing_running = False
 
         self._async_loop = None
-        self.traces_queue = asyncio.Queue()
         # To start traces
-        self.task_run_traces = None
         self.run_traces()
 
     def stop_traces(self):
-        self._is_tracing_running = False
-        if self.task_run_traces:
-            self.task_run_traces.cancel()
-        for trace_path_obj in self._running_traces.values():
-            trace_path_obj.trace_ended = True
-            trace_path_obj.trace_task.cancel()
-            # TODO: wait for task cancellation
-            # await trace_path_obj.trace_task
+        if self._is_tracing_running:
+            self._is_tracing_running = False
+            self._request_queue.close()
+        for trace_obj in self._running_traces.values():
+            trace_obj.trace_ended = True
+            if trace_obj.id in self._trace_pkt_in:
+                self._trace_pkt_in[trace_obj.id].close()
 
     def is_tracing_running(self):
         return self._is_tracing_running
@@ -72,12 +71,11 @@ class TraceManager(object):
         """
         Create the task to search for traces _run_traces.
         """
-        self._async_loop = asyncio.get_running_loop()
-        self.task_run_traces = self._async_loop.create_task(
-            self._run_traces()
-        )
+        self._request_queue = Queue()
+        self._is_tracing_running = True
+        new_thread(self._run_traces, ())
 
-    async def _run_traces(self):
+    def _run_traces(self):
         """ Thread that will keep reading the self._request_dict
         queue looking for new trace requests to run.
         """
@@ -85,16 +83,19 @@ class TraceManager(object):
             while self.is_tracing_running():
                 try:
                     if not self.limit_traces_reached():
-                        request_id = await self._request_queue.get()
+                        request_id = self._request_queue.sync_q.get()
                         entries = self._request_dict[request_id]
-                        self._spawn_trace(request_id, entries)
+                        new_thread(self._spawn_trace, (request_id, entries))
                         # After starting traces for new requests,
                         # remove them from self._request_dict
                         del self._request_dict[request_id]
+                    else:
+                        # Wait for traces to end
+                        time.sleep(1)
                 except Exception as error:  # pylint: disable=broad-except
                     log.error("Trace Error: %s" % error)
-        except asyncio.CancelledError:
-            log.warning("sdntrace is cancelling trace loopk up.")
+        except RuntimeError:
+            log.warning("Ignored trace request while sdntrace was shutting down.")
 
     def _spawn_trace(self, trace_id, trace_entries):
         """ Once a request is found by the run_traces method,
@@ -109,10 +110,9 @@ class TraceManager(object):
         tracer = TracePath(self, trace_id, trace_entries)
 
         self._running_traces[trace_id] = tracer
-        task = self._async_loop.create_task(
-            tracer.tracepath()
-        )
-        tracer.trace_task = task
+        print(1)
+        tracer.tracepath()
+        print(2)
 
     def add_result(self, trace_id, result):
         """Used to save trace results to self._results_queue
@@ -122,7 +122,7 @@ class TraceManager(object):
             result: trace result generated using tracer
         """
         self._results_queue[trace_id] = result
-        del self._running_traces[trace_id]
+        self._running_traces.pop(trace_id, None)
 
     def avoid_duplicated_request(self, entries):
         """Verify if any of the requested queries has the same entries.
@@ -185,6 +185,9 @@ class TraceManager(object):
             result from self._results_queue
             msg depending of the status (unknown, pending, or active)
         """
+        print("Results queue -> ", self._results_queue)
+        print("Running traces -> ", self._running_traces)
+        print("Request dict -> ", self._request_dict)
         trace_id = int(trace_id)
         try:
             return self._results_queue[trace_id]
@@ -230,7 +233,10 @@ class TraceManager(object):
 
         # Add to request_queue
         self._request_dict[trace_id] = trace_entries
-        await self._request_queue.put(trace_id)
+        try:
+            await self._request_queue.async_q.put(trace_id)
+        except RuntimeError:
+            pass
 
         # Statistics
         self._total_traces_requested += 1
@@ -245,6 +251,15 @@ class TraceManager(object):
         """
         return len(self._request_dict)
 
+    def get_unpickled_packet_eth(self, ethernet) -> Optional[TraceMsg]:
+        """Unpickle PACKET_IN ethernet or catch errors."""
+        try:
+            msg = dill.loads(process_packet(ethernet))
+        except dill.UnpicklingError as err:
+            log.error(f"Error getting msg from PacketIn: {err}")
+            return None
+        return msg
+
     async def queue_probe_packet(self, event, ethernet, in_port, switch):
         """Used by sdntrace.packet_in_handler. Only tracing probes
         get to this point. Adds the PacketIn msg received to the
@@ -256,18 +271,24 @@ class TraceManager(object):
             in_port: in_port
             switch: kytos.core.switch.Switch() class
         """
+        msg = dill.loads(process_packet(ethernet))
+        if msg is None:
+            return
         pkt_in = dict()
-
         pkt_in["dpid"] = switch.dpid
         pkt_in["in_port"] = in_port
-        pkt_in["msg"] = dill.loads(process_packet(ethernet))
+        pkt_in["msg"] = msg
         pkt_in["ethernet"] = ethernet
         pkt_in["event"] = event
         request_id = pkt_in['msg'].request_id
 
         if request_id not in self._results_queue:
             # This queue stores all PacketIn message received
-            await self._trace_pkt_in[request_id].put(pkt_in)
+            try:
+                await self._trace_pkt_in[request_id].async_q.put(pkt_in)
+            except RuntimeError:
+                # If queue was close do nothing
+                pass
 
     # REST calls
 

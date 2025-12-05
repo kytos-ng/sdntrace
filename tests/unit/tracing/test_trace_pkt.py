@@ -81,23 +81,23 @@ class TestTracePkt:
         trace_entries = TraceEntries()
         trace_entries.load_entries(entries)
         r_id = 999
+        step = 9
 
         # Coloring REST response
         color = {"color_value": "ee:ee:ee:ee:ee:01"}
 
         # new_trace does not check duplicated request.
-        in_port, pkt = trace_pkt.generate_trace_pkt(trace_entries, color, r_id)
+        in_port, pkt = trace_pkt.generate_trace_pkt(trace_entries, color, r_id, step)
 
         assert entries["trace"]["switch"]["in_port"] == in_port
         assert (
-            pkt == b"\xca\xfe\xca\xfe\xca\xfe\xee\xee\xee\xee\xee"
-            b"\x01\x81\x00\x00d\x08\x00E\x00\x00\x84\x00\x00\x00"
-            b"\x00\xff\x06\xb7o\x01\x01\x01\x01\x01\x01\x01\x02"
-            b"\x00\x01\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00P"
-            b"\x02\x00S\xb4\xf0\x00\x00\x80\x04\x95Q\x00\x00\x00"
-            b"\x00\x00\x00\x00\x8c(napps.amlight.sdntrace.tracing"
-            b".trace_msg\x94\x8c\x08TraceMsg\x94\x93\x94)\x81\x94}"
-            b"\x94\x8c\x0b_request_id\x94M\xe7\x03sb."
+            pkt == b"\xca\xfe\xca\xfe\xca\xfe\xee\xee\xee\xee\xee\x01"
+            b"\x81\x00\x00d\x08\x00E\x00\x00\x8f\x00\x00\x00\x00\xff\x06"
+            b"\xb7d\x01\x01\x01\x01\x01\x01\x01\x02\x00\x01\x00\x02\x00"
+            b"\x00\x00\x00\x00\x00\x00\x00P\x02\x00S\x86G\x00\x00\x80\x04"
+            b"\x95\\\x00\x00\x00\x00\x00\x00\x00\x8c(napps.amlight.sdntrace"
+            b".tracing.trace_msg\x94\x8c\x08TraceMsg\x94\x93\x94)\x81\x94}"
+            b"\x94(\x8c\x0b_request_id\x94M\xe7\x03\x8c\x05_step\x94K\tub."
         )
 
     @patch("napps.amlight.sdntrace.shared.extd_nw_types.randrange")
@@ -114,41 +114,38 @@ class TestTracePkt:
         trace_entries = TraceEntries()
         trace_entries.load_entries(entries)
         r_id = 999
+        step = 9
 
         # Coloring REST response
         color = {"color_value": "ee:ee:ee:ee:ee:01"}
 
         # new_trace does not check duplicated request.
-        in_port, pkt = trace_pkt.generate_trace_pkt(trace_entries, color, r_id)
+        in_port, pkt = trace_pkt.generate_trace_pkt(trace_entries, color, r_id, step)
         assert entries["trace"]["switch"]["in_port"] == in_port
         assert (
-            pkt == b"\xca\xfe\xca\xfe\xca\xfe\xee\xee\xee\xee\xee"
-            b"\x01\x81\x00\x00d\x08\x00E\x00\x00x\x00\x00\x00\x00"
-            b"\xff\x11\xb7p\x01\x01\x01\x01\x01\x01\x01\x02\x00\x01"
-            b"\x00\x02\x00d\x04\xe3\x80\x04\x95Q\x00\x00\x00\x00"
-            b"\x00\x00\x00\x8c(napps.amlight.sdntrace.tracing."
-            b"trace_msg\x94\x8c\x08TraceMsg\x94\x93\x94)\x81\x94}"
-            b"\x94\x8c\x0b_request_id\x94M\xe7\x03sb."
+            pkt == b"\xca\xfe\xca\xfe\xca\xfe\xee\xee\xee\xee\xee\x01\x81"
+            b"\x00\x00d\x08\x00E\x00\x00\x83\x00\x00\x00\x00\xff\x11\xb7e"
+            b"\x01\x01\x01\x01\x01\x01\x01\x02\x00\x01\x00\x02\x00o\xd6."
+            b"\x80\x04\x95\\\x00\x00\x00\x00\x00\x00\x00\x8c(napps.amlight"
+            b".sdntrace.tracing.trace_msg\x94\x8c\x08TraceMsg\x94\x93\x94)"
+            b"\x81\x94}\x94(\x8c\x0b_request_id\x94M\xe7\x03\x8c\x05_step"
+            b"\x94K\tub."
         )
 
-    @patch("napps.amlight.sdntrace.shared.colors.Colors.aget_switch_color")
-    async def test_get_node_color_from_dpid(self, mock_aswitch_colors):
+    @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
+    def test_get_node_color_from_dpid(self, mock_switch_colors):
         """Test get color from dpid."""
-        mock_aswitch_colors.return_value = "ee:ee:ee:ee:ee:01"
+        mock_switch_colors.return_value = "ee:ee:ee:ee:ee:01"
 
-        switch, color = await trace_pkt._get_node_color_from_dpid(
-            "00:00:00:00:00:00:00:01"
-        )
+        switch, color = trace_pkt._get_node_color_from_dpid("00:00:00:00:00:00:00:01")
 
         assert switch.dpid == "00:00:00:00:00:00:00:01"
         assert color == "ee:ee:ee:ee:ee:01"
-        mock_aswitch_colors.assert_called_once()
+        mock_switch_colors.assert_called_once()
 
-    async def test_get_node_color_unknown_dpid(self):
+    def test_get_node_color_unknown_dpid(self):
         """Test get color from unknown dpid."""
-        switch, color = await trace_pkt._get_node_color_from_dpid(
-            "99:99:99:99:99:99:99:99"
-        )
+        switch, color = trace_pkt._get_node_color_from_dpid("99:99:99:99:99:99:99:99")
 
         assert switch == 0
         assert color == 0
@@ -244,7 +241,7 @@ class TestTracePkt:
         assert trace_msg == expected
 
     @patch("napps.amlight.sdntrace.tracing.trace_pkt._get_node_color_from_dpid")
-    async def test_prepare_next_packet(self, mock_get_color):
+    def test_prepare_next_packet(self, mock_get_color):
         """Test trace prepare next packet."""
         color_switch = MagicMock()
         color_switch.dpid = "00:00:00:00:00:00:00:01"
@@ -288,13 +285,13 @@ class TestTracePkt:
         result = {"dpid": pkt_in["dpid"], "port": pkt_in["in_port"]}
 
         # result = [result_trace, result_color, result_switch]
-        result = await trace_pkt.prepare_next_packet(trace_entries, result, event)
+        result = trace_pkt.prepare_next_packet(trace_entries, result, event)
         assert result[0] == trace_entries
-        assert result[1] == (await mock_get_color())[1]
+        assert result[1] == (mock_get_color())[1]
         assert result[2].dpid == color_switch.dpid
 
     @patch("napps.amlight.sdntrace.tracing.trace_pkt._get_node_color_from_dpid")
-    async def test_prepare_next_packet_no_vlan(self, mock_get_color):
+    def test_prepare_next_packet_no_vlan(self, mock_get_color):
         """Test trace prepare next packet."""
         color_switch = MagicMock()
         color_switch.dpid = "00:00:00:00:00:00:00:01"
@@ -330,6 +327,6 @@ class TestTracePkt:
 
         result = {"dpid": "00:00:00:00:00:00:00:01"}
 
-        result = await trace_pkt.prepare_next_packet(trace_entries, result, event)
+        result = trace_pkt.prepare_next_packet(trace_entries, result, event)
 
         assert result[0].dl_vlan == 0

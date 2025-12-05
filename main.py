@@ -29,7 +29,7 @@ from napps.amlight.sdntrace.shared.switches import Switches
 from napps.amlight.sdntrace.tracing.trace_manager import TraceManager
 
 from kytos.core import KytosNApp, rest
-from kytos.core.helpers import load_spec, avalidate_openapi_request, alisten_to
+from kytos.core.helpers import alisten_to, avalidate_openapi_request, load_spec
 from kytos.core.rest_api import JSONResponse, Request, aget_json_or_400
 
 
@@ -114,6 +114,5 @@ class Main(KytosNApp):
         settings_dict = {}
         settings_dict["color_field"] = settings.COLOR_FIELD
         settings_dict["color_value"] = settings.COLOR_VALUE
-        settings_dict["trace_interval"] = settings.TRACE_INTERVAL
         settings_dict["parallel_traces"] = settings.PARALLEL_TRACES
         return JSONResponse(settings_dict)

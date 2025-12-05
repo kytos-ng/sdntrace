@@ -79,10 +79,9 @@ class TestTracePath:
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
         switch = {"switch": dpid, "eth": eth}
         entries = {"trace": switch}
-        trace_entries = self.trace_manager.is_entry_valid(entries)
-
+        trace_entries = await self.trace_manager.is_entry_valid(entries)
         tracer = TracePath(self.trace_manager, trace_id, trace_entries)
-        await tracer.tracepath()
+        tracer.tracepath()
 
         # Retrieve trace result created from tracepath
         result = self.trace_manager.get_result(trace_id)
@@ -127,7 +126,7 @@ class TestTracePath:
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
         switch = {"switch": dpid, "eth": eth}
         entries = {"trace": switch}
-        trace_entries = self.trace_manager.is_entry_valid(entries)
+        trace_entries = await self.trace_manager.is_entry_valid(entries)
 
         tracer = TracePath(self.trace_manager, trace_id, trace_entries)
 
@@ -146,7 +145,7 @@ class TestTracePath:
         mock_trace_loop.side_effect = wrap_tracepath_loop
 
         # Execute tracepath
-        await tracer.tracepath()
+        tracer.tracepath()
 
         # Retrieve trace result created from tracepath
         result = self.trace_manager.get_result(trace_id)
@@ -167,7 +166,7 @@ class TestTracePath:
         assert mock_switch_colors.call_count == 1
         assert mock_aswitch_colors.call_count == 1
 
-    @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
+    @patch("napps.amlight.sdntrace.shared.colors.Colors.aget_switch_color")
     @patch("napps.amlight.sdntrace.shared.switches.Switches.get_switch")
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.tracepath_loop")
     @patch("napps.amlight.sdntrace.tracing.tracer.send_packet_out")
@@ -176,10 +175,10 @@ class TestTracePath:
         mock_send_packet_out,
         mock_trace_loop,
         mock_get_switch,
-        mock_switch_colors,
+        mock_aswitch_colors,
     ):
         """Test send_trace_probe send and receive."""
-        mock_switch_colors.return_value = "ee:ee:ee:ee:ee:01"
+        mock_aswitch_colors.return_value = "ee:ee:ee:ee:ee:01"
 
         mock_send_packet_out.return_value = True
 
@@ -199,7 +198,7 @@ class TestTracePath:
         pkt_in["msg"] = msg
         pkt_in["ethernet"] = "fake_ethernet_object"
         pkt_in["event"] = "fake_event_object"
-        self.trace_manager.trace_pkt_in = [pkt_in]
+        self.trace_manager._trace_pkt_in[msg.request_id].sync_q.put(pkt_in)
 
         # Trace id to recover the result
         trace_id = 111
@@ -209,23 +208,23 @@ class TestTracePath:
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
         switch = {"switch": dpid, "eth": eth}
         entries = {"trace": switch}
-        trace_entries = self.trace_manager.is_entry_valid(entries)
+        trace_entries = await self.trace_manager.is_entry_valid(entries)
 
         tracer = TracePath(self.trace_manager, trace_id, trace_entries)
 
         in_port = 1
         probe_pkt = MagicMock()
 
-        result = await tracer.send_trace_probe(switch_obj, in_port, probe_pkt)
+        result = tracer.send_trace_probe(switch_obj, in_port, probe_pkt)
 
         mock_send_packet_out.assert_called_once()
 
         assert result[0]["dpid"] == "00:00:00:00:00:00:00:01"
         assert result[0]["port"] == 1
         assert result[1] == "fake_event_object"
-        mock_switch_colors.assert_called_once()
+        mock_aswitch_colors.assert_called_once()
 
-    @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
+    @patch("napps.amlight.sdntrace.shared.colors.Colors.aget_switch_color")
     @patch("napps.amlight.sdntrace.shared.switches.Switches.get_switch")
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.tracepath_loop")
     @patch("napps.amlight.sdntrace.tracing.tracer.send_packet_out")
@@ -259,7 +258,7 @@ class TestTracePath:
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
         switch = {"switch": dpid, "eth": eth, "timeout": timeout}
         entries = {"trace": switch}
-        trace_entries = self.trace_manager.is_entry_valid(entries)
+        trace_entries = await self.trace_manager.is_entry_valid(entries)
 
         tracer = TracePath(self.trace_manager, trace_id, trace_entries)
 
@@ -268,7 +267,7 @@ class TestTracePath:
 
         expected_time = timeout * 3
         start_time = time.time()
-        result = await tracer.send_trace_probe(switch_obj, in_port, probe_pkt)
+        result = tracer.send_trace_probe(switch_obj, in_port, probe_pkt)
         actual_time = time.time() - start_time
 
         assert mock_send_packet_out.call_count == 3
@@ -278,11 +277,11 @@ class TestTracePath:
         assert result[1] is False
         mock_aswitch_colors.assert_called_once()
 
-    @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
+    @patch("napps.amlight.sdntrace.shared.colors.Colors.aget_switch_color")
     @patch("napps.amlight.sdntrace.shared.switches.Switches.get_switch")
-    def test_check_loop(self, mock_get_switch, mock_switch_colors):
+    async def test_check_loop(self, mock_get_switch, mock_aswitch_colors):
         """Test check_loop with loop detection."""
-        mock_switch_colors.return_value = "ee:ee:ee:ee:ee:01"
+        mock_aswitch_colors.return_value = "ee:ee:ee:ee:ee:01"
 
         # Patch Switches.get_switch
         def wrap_get_switch(dpid):
@@ -300,7 +299,7 @@ class TestTracePath:
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
         switch = {"switch": dpid, "eth": eth}
         entries = {"trace": switch}
-        trace_entries = self.trace_manager.is_entry_valid(entries)
+        trace_entries = await self.trace_manager.is_entry_valid(entries)
 
         tracer = TracePath(self.trace_manager, trace_id, trace_entries)
 
@@ -332,14 +331,14 @@ class TestTracePath:
         )
 
         result = tracer.check_loop()
-        mock_switch_colors.assert_called_once()
+        mock_aswitch_colors.assert_called_once()
         assert result is True
 
-    @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
+    @patch("napps.amlight.sdntrace.shared.colors.Colors.aget_switch_color")
     @patch("napps.amlight.sdntrace.shared.switches.Switches.get_switch")
-    def test_check_loop_false(self, mock_get_switch, mock_switch_colors):
+    async def test_check_loop_false(self, mock_get_switch, mock_aswitch_colors):
         """Test check_loop with no loop detection."""
-        mock_switch_colors.return_value = "ee:ee:ee:ee:ee:01"
+        mock_aswitch_colors.return_value = "ee:ee:ee:ee:ee:01"
 
         # Patch Switches.get_switch
         def wrap_get_switch(dpid):
@@ -357,7 +356,7 @@ class TestTracePath:
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
         switch = {"switch": dpid, "eth": eth}
         entries = {"trace": switch}
-        trace_entries = self.trace_manager.is_entry_valid(entries)
+        trace_entries = await self.trace_manager.is_entry_valid(entries)
 
         tracer = TracePath(self.trace_manager, trace_id, trace_entries)
 
@@ -377,14 +376,16 @@ class TestTracePath:
         )
 
         result = tracer.check_loop()
-        mock_switch_colors.assert_called_once()
+        mock_aswitch_colors.assert_called_once()
         assert result == 0
 
-    @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
+    @patch("napps.amlight.sdntrace.shared.colors.Colors.aget_switch_color")
     @patch("napps.amlight.sdntrace.shared.switches.Switches.get_switch")
-    def test_check_loop_port_different(self, mock_get_switch, mock_switch_colors):
+    async def test_check_loop_port_different(
+        self, mock_get_switch, mock_aswitch_colors
+    ):
         """Test check_loop with same switch and different port."""
-        mock_switch_colors.return_value = "ee:ee:ee:ee:ee:01"
+        mock_aswitch_colors.return_value = "ee:ee:ee:ee:ee:01"
 
         # Patch Switches.get_switch
         def wrap_get_switch(dpid):
@@ -402,7 +403,7 @@ class TestTracePath:
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
         switch = {"switch": dpid, "eth": eth}
         entries = {"trace": switch}
-        trace_entries = self.trace_manager.is_entry_valid(entries)
+        trace_entries = await self.trace_manager.is_entry_valid(entries)
 
         tracer = TracePath(self.trace_manager, trace_id, trace_entries)
 
@@ -428,10 +429,10 @@ class TestTracePath:
         )
 
         result = tracer.check_loop()
-        mock_switch_colors.assert_called_once()
+        mock_aswitch_colors.assert_called_once()
         assert result == 0
 
-    @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
+    @patch("napps.amlight.sdntrace.shared.colors.Colors.aget_switch_color")
     @patch("napps.amlight.sdntrace.shared.switches.Switches.get_switch")
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.send_trace_probe")
     @patch("napps.amlight.sdntrace.tracing.tracer.prepare_next_packet")
@@ -440,11 +441,11 @@ class TestTracePath:
         mock_next_packet,
         mock_probe,
         mock_get_switch,
-        mock_switch_colors,
+        mock_aswitch_colors,
     ):
         """Test tracepath loop method. This test force the return
         after one normal trace."""
-        mock_switch_colors.return_value = "ee:ee:ee:ee:ee:01"
+        mock_aswitch_colors.return_value = "ee:ee:ee:ee:ee:01"
 
         # Patch Switches.get_switch
         def wrap_get_switch(dpid):
@@ -467,7 +468,7 @@ class TestTracePath:
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
         switch = {"switch": dpid, "eth": eth}
         entries = {"trace": switch}
-        trace_entries = self.trace_manager.is_entry_valid(entries)
+        trace_entries = await self.trace_manager.is_entry_valid(entries)
 
         tracer = TracePath(self.trace_manager, trace_id, trace_entries)
 
@@ -482,25 +483,25 @@ class TestTracePath:
         color = {"color_field": "dl_src", "color_value": "ee:ee:ee:ee:01:2c"}
 
         # Execute tracepath
-        await tracer.tracepath_loop(trace_entries, color, switch)
+        tracer.tracepath_loop(trace_entries, color, switch)
         result = tracer.trace_result
 
         mock_probe.assert_called_once()
-        mock_switch_colors.assert_called_once()
+        mock_aswitch_colors.assert_called_once()
         assert result[0]["type"] == "trace"
         assert result[0]["dpid"] == "00:00:00:00:00:00:00:01"
 
-    @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
+    @patch("napps.amlight.sdntrace.shared.colors.Colors.aget_switch_color")
     @patch("napps.amlight.sdntrace.shared.switches.Switches.get_switch")
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.send_trace_probe")
     async def test_tracepath_loop_timeout(
         self,
         mock_probe,
         mock_get_switch,
-        mock_switch_colors,
+        mock_aswitch_colors,
     ):
         """Test tracepath loop method finishing with timeout."""
-        mock_switch_colors.return_value = "ee:ee:ee:ee:ee:01"
+        mock_aswitch_colors.return_value = "ee:ee:ee:ee:ee:01"
 
         # Patch Switches.get_switch
         def wrap_get_switch(dpid):
@@ -520,23 +521,23 @@ class TestTracePath:
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
         switch = {"switch": dpid, "eth": eth}
         entries = {"trace": switch}
-        trace_entries = self.trace_manager.is_entry_valid(entries)
+        trace_entries = await self.trace_manager.is_entry_valid(entries)
 
         color = {"color_field": "dl_src", "color_value": "ee:ee:ee:ee:01:2c"}
 
         # Execute tracepath
         tracer = TracePath(self.trace_manager, trace_id, trace_entries)
-        await tracer.tracepath_loop(trace_entries, color, switch)
+        tracer.tracepath_loop(trace_entries, color, switch)
 
         result = tracer.trace_result
 
         mock_probe.assert_called_once()
-        mock_switch_colors.assert_called_once()
+        mock_aswitch_colors.assert_called_once()
         assert result[0]["type"] == "last"
         assert result[0]["reason"] == "done"
         assert result[0]["msg"] == "none"
 
-    @patch("napps.amlight.sdntrace.shared.colors.Colors.get_switch_color")
+    @patch("napps.amlight.sdntrace.shared.colors.Colors.aget_switch_color")
     @patch("napps.amlight.sdntrace.shared.switches.Switches.get_switch")
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.send_trace_probe")
     @patch("napps.amlight.sdntrace.tracing.tracer.prepare_next_packet")
@@ -547,10 +548,10 @@ class TestTracePath:
         mock_next_packet,
         mock_probe,
         mock_get_switch,
-        mock_switch_colors,
+        mock_aswitch_colors,
     ):
         """Test tracepath loop method finishing with a loop."""
-        mock_switch_colors.return_value = "ee:ee:ee:ee:ee:01"
+        mock_aswitch_colors.return_value = "ee:ee:ee:ee:ee:01"
         mock_check_loop.return_value = True
 
         # Patch Switches.get_switch
@@ -574,7 +575,7 @@ class TestTracePath:
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
         switch = {"switch": dpid, "eth": eth}
         entries = {"trace": switch}
-        trace_entries = self.trace_manager.is_entry_valid(entries)
+        trace_entries = await self.trace_manager.is_entry_valid(entries)
 
         tracer = TracePath(self.trace_manager, trace_id, trace_entries)
 
@@ -589,14 +590,14 @@ class TestTracePath:
         color = {"color_field": "dl_src", "color_value": "ee:ee:ee:ee:01:2c"}
 
         # Execute tracepath
-        await tracer.tracepath_loop(trace_entries, color, switch)
+        tracer.tracepath_loop(trace_entries, color, switch)
         result = tracer.trace_result
 
         mock_check_loop.assert_called_once()
         mock_next_packet.assert_not_called()
         mock_probe.assert_called_once()
         assert mock_get_switch.call_count == 3
-        mock_switch_colors.assert_called_once()
+        mock_aswitch_colors.assert_called_once()
 
         assert result[0]["type"] == "trace"
         assert result[0]["dpid"] == "00:00:00:00:00:00:00:01"

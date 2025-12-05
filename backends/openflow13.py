@@ -37,7 +37,7 @@ def packet_in(event, packet_in_msg):
     log.debug("PacketIn is not a Data Trace Probe")
     return 0, 0, 0
 
-async def send_packet_out(controller, switch, port, data):
+def send_packet_out(controller, switch, port, data):
     """ Just prepare the PacketOut to be used by the Tracer.
 
     Args:
@@ -63,4 +63,4 @@ async def send_packet_out(controller, switch, port, data):
                  'message': packet_out}
     )
     log.debug('PacketOut %s sent' % event_out.content)
-    await controller.buffers.msg_out.aput(event_out)
+    controller.buffers.msg_out.put(event_out)

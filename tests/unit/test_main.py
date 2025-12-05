@@ -97,7 +97,7 @@ class TestMain:
 
         # Trace pending
         self.napp.tracing._running_traces = {}
-        self.napp.tracing._request_queue = {int(trace_id): "mock"}
+        self.napp.tracing._request_dict = {int(trace_id): "mock"}
         url = f"{self.base_endpoint}/trace/{trace_id}"
         response = await self.api_client.get(url)
         assert response.status_code == 200
@@ -105,7 +105,7 @@ class TestMain:
         assert result == {"msg": "trace pending"}
 
         # Trace not found
-        self.napp.tracing._request_queue = {}
+        self.napp.tracing._request_dict = {}
         url = f"{self.base_endpoint}/trace/{int(trace_id)}"
         response = await self.api_client.get(url)
         assert response.status_code == 200
@@ -128,11 +128,11 @@ class TestMain:
         traces_n = 99
         self.napp.tracing.stop_traces()
         traces_running = {"mock": "request"}
-        queue_request = {"mock1": "trace1", "mock2": "trace2"}
+        dict_request = {"mock1": "trace1", "mock2": "trace2"}
         queue_result = {"mock": "result"}
         self.napp.tracing._total_traces_requested = traces_n
         self.napp.tracing._running_traces = traces_running
-        self.napp.tracing._request_queue = queue_request
+        self.napp.tracing._request_dict = dict_request
         self.napp.tracing._results_queue = queue_result
         url = f"{self.base_endpoint}/stats"
         response = await self.api_client.get(url)
@@ -141,7 +141,7 @@ class TestMain:
         expected_result = {
             "number_of_requests": traces_n,
             "number_of_running_traces": len(traces_running),
-            "number_of_pending_traces": len(queue_request),
+            "number_of_pending_traces": len(dict_request),
             "list_of_pending_traces": queue_result,
         }
         assert actual_result == expected_result
@@ -154,7 +154,6 @@ class TestMain:
         expected_result = {
             "color_field": settings.COLOR_FIELD,
             "color_value": settings.COLOR_VALUE,
-            "trace_interval": settings.TRACE_INTERVAL,
             "parallel_traces": settings.PARALLEL_TRACES,
         }
         assert actual_result == expected_result
