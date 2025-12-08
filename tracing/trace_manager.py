@@ -110,9 +110,7 @@ class TraceManager(object):
         tracer = TracePath(self, trace_id, trace_entries)
 
         self._running_traces[trace_id] = tracer
-        print(1)
         tracer.tracepath()
-        print(2)
 
     def add_result(self, trace_id, result):
         """Used to save trace results to self._results_queue
@@ -185,9 +183,6 @@ class TraceManager(object):
             result from self._results_queue
             msg depending of the status (unknown, pending, or active)
         """
-        print("Results queue -> ", self._results_queue)
-        print("Running traces -> ", self._running_traces)
-        print("Request dict -> ", self._request_dict)
         trace_id = int(trace_id)
         try:
             return self._results_queue[trace_id]

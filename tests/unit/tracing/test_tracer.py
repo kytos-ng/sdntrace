@@ -601,3 +601,17 @@ class TestTracePath:
 
         assert result[0]["type"] == "trace"
         assert result[0]["dpid"] == "00:00:00:00:00:00:00:01"
+
+    async def test_get_packet_in_empty(self):
+        """Test get_packet_in when no packet in was caught."""
+        trace_id = 111
+        eth = {"dl_vlan": 100}
+        dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
+        switch = {"switch": dpid, "eth": eth}
+        entries = {"trace": switch}
+        trace_entries = await self.trace_manager.is_entry_valid(entries)
+        tracer = TracePath(self.trace_manager, trace_id, trace_entries)
+
+        # No packetIn
+        self.trace_manager._trace_pkt_in = {}
+        assert tracer.get_packet_in() is None

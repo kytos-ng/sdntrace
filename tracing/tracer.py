@@ -56,7 +56,6 @@ class TracePath(object):
         Returns:
             Switch class
         """
-        print(self.init_entries)
         return Switches().get_switch(self.init_entries.dpid)
 
     def tracepath(self):
@@ -91,7 +90,6 @@ class TracePath(object):
                     "request": self.init_entries.init_entries}
         self.trace_mgr.add_result(self.id, t_result)
         self.clear_trace_pkt_in()
-        print("--99--")
 
     def tracepath_loop(self, entries, color, switch):
         """ This method sends the packet_out per hop, create the result
@@ -159,6 +157,8 @@ class TracePath(object):
     def get_packet_in(self):
         """Wait for a PacketIn and verify if it is from the correct step."""
         while not self.trace_ended:
+            if self.id not in self.trace_mgr._trace_pkt_in:
+                return None
             try:
                 pkt_in_msg = self.trace_mgr._trace_pkt_in[self.id].sync_q.get(block=False)
             except queue.Empty:
@@ -169,7 +169,6 @@ class TracePath(object):
 
     def clear_trace_pkt_in(self):
         """ Once the probe PacketIn was processed, delete it from queue."""
-        print("pkt?? -> ", self.trace_mgr._trace_pkt_in)
         if self.id in self.trace_mgr._trace_pkt_in:
             self.trace_mgr._trace_pkt_in[self.id].close()
             del self.trace_mgr._trace_pkt_in[self.id]
