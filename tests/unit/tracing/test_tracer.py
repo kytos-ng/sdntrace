@@ -602,8 +602,22 @@ class TestTracePath:
         assert result[0]["type"] == "trace"
         assert result[0]["dpid"] == "00:00:00:00:00:00:00:01"
 
-    async def test_get_packet_in_empty(self):
+    @patch("napps.amlight.sdntrace.shared.colors.Colors.aget_switch_color")
+    @patch("napps.amlight.sdntrace.shared.switches.Switches.get_switch")
+    async def test_get_packet_in_empty(
+        self,
+        mock_get_switch,
+        mock_aswitch_colors,
+    ):
         """Test get_packet_in when no packet in was caught."""
+
+        def wrap_get_switch(dpid):
+            switch = MagicMock()
+            switch.dpid = dpid
+            return switch
+
+        mock_get_switch.side_effect = wrap_get_switch
+        mock_aswitch_colors.return_value = "ee:ee:ee:ee:ee:01"
         trace_id = 111
         eth = {"dl_vlan": 100}
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
