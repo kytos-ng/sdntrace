@@ -14,6 +14,7 @@ from kytos.lib.helpers import (
     get_link_mock,
     get_switch_mock,
 )
+from pyof.foundation.network_types import Ethernet
 from napps.amlight.sdntrace import settings
 from napps.amlight.sdntrace.shared.switches import Switches
 from napps.amlight.sdntrace.tracing.trace_entries import TraceEntries
@@ -412,3 +413,21 @@ class TestTraceManagerTheadTest:
 
         assert self.trace_manager._request_queue.async_q.qsize() == 0
         assert self.trace_manager.number_pending_requests() == 0
+
+    async def test_queue_probe_packet_error(self):
+        """Test queue_probe_packet handle error."""
+        self.trace_manager._trace_pkt_in = {30001: MagicMock()}
+        self.trace_manager._trace_pkt_in[30001].async_q.put = AsyncMock()
+        mock_msg = (
+            b"\01\xca\xfe\xca\xfe\xca\xfe\xee\xee\xee\xee\xee\x01\x88\xa8\x00\x01"
+            b"\x81\x00\x00\x01\x08\x00E\x00\x00{\x00\x00\x00\x00\xff\x00\xb7~\x01"
+            b"\x01\x01\x01\x01\x01\x01\x02\x80\x04\x95\\\x00\x00\x00\x00\x00\x00"
+            b"\x00\x8c(napps.amlight.sdntrace.tracing.trace_msg\x94\x8c\x08TraceMsg"
+            b"\x94\x93\x94)\x81\x94}\x94(\x8c\x0b_request_id\x94M1u\x8c\x05_step"
+            b"\x94K\x00ub."
+        )
+        eth = Ethernet()
+        eth.unpack(mock_msg)
+        await self.trace_manager.queue_probe_packet("event_mock", eth, 1, MagicMock())
+
+        assert self.trace_manager._trace_pkt_in[30001].async_q.put.call_count == 0

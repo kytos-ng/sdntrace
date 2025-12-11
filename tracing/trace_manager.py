@@ -266,7 +266,7 @@ class TraceManager(object):
             in_port: in_port
             switch: kytos.core.switch.Switch() class
         """
-        msg = dill.loads(process_packet(ethernet))
+        msg = self.get_unpickled_packet_eth(ethernet)
         if msg is None:
             return
         pkt_in = dict()
