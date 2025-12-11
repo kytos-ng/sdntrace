@@ -136,7 +136,7 @@ class TracePath(object):
         """
         timeout_control = 0  # Controls the timeout of 1 second and two tries
         while not self.trace_ended:
-            log.warning(f'Trace {self.id}: Sending POut to switch:'
+            log.info(f'Trace {self.id}: Sending POut to switch:'
                         f' {switch.dpid} and in_port {in_port}.'
                         f' Timeout: {self.init_entries.timeout}')
             send_packet_out(self.trace_mgr.controller,
