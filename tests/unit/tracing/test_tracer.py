@@ -629,3 +629,15 @@ class TestTracePath:
         # No packetIn
         self.trace_manager._trace_pkt_in = {}
         assert tracer.get_packet_in() is None
+
+    @patch("napps.amlight.sdntrace.shared.switches.Switches.get_switch")
+    def test_send_trace_probe_pre_ended(self, mock_get_switch):
+        """Test send_trace_probe when trace ended prematurely."""
+        mock_get_switch.return_value = True
+        initial_entries = MagicMock(dpid="00:01")
+        tracer = TracePath(self.trace_manager, 3001, initial_entries)
+
+        tracer.trace_ended = True
+        result, packet_in = tracer.send_trace_probe("switch_mock", 1, "probe_mock")
+        assert result == "pre-ended"
+        assert packet_in is False

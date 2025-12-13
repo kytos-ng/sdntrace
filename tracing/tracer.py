@@ -102,6 +102,10 @@ class TracePath(object):
             result, packet_in = self.send_trace_probe(switch, in_port,
                                                       probe_pkt)
             self.step += 1
+            if result == 'pre-ended':
+                # Trace got canceled. Kytos may have shut down.
+                self.rest.add_trace_step(self.trace_result, trace_type=result)
+                break
             if result == 'timeout':
                 self.rest.add_trace_step(self.trace_result, trace_type='last')
                 log.warning("Trace %s: Trace Completed!" % self.id)
@@ -153,6 +157,7 @@ class TracePath(object):
             timeout_control += 1
             if timeout_control >= 3:
                 return 'timeout', False
+        return 'pre-ended', False
 
     def get_packet_in(self):
         """Wait for a PacketIn and verify if it is from the correct step."""
