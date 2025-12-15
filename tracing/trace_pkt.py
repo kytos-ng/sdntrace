@@ -13,7 +13,7 @@ from napps.amlight.sdntrace.shared.switches import Switches
 from napps.amlight.sdntrace.shared.colors import Colors
 
 
-def generate_trace_pkt(trace_entries, color, r_id):
+def generate_trace_pkt(trace_entries, color, r_id, step):
     """ Receives the REST/PUT to generate a PacketOut
     data needs to be serialized. The goal is always to create
     a packet with data being the TraceMsg to differentiate different
@@ -36,7 +36,7 @@ def generate_trace_pkt(trace_entries, color, r_id):
 
     ethernet = _create_ethernet_frame(trace_entries, color)
 
-    msg = TraceMsg(r_id)
+    msg = TraceMsg(r_id, step)
 
     if ethernet.ether_type == constants.IPV4:
         ip_pkt = _create_ip_packet(trace_entries)
@@ -190,7 +190,6 @@ def _create_udp_packet(trace_entries) -> UDP:
     udp_pkt.src_port = trace_entries.tp_src
     udp_pkt.dst_port = trace_entries.tp_dst
     return udp_pkt
-
 
 def _get_node_color_from_dpid(dpid):
     """ Get node color from Coloring Napp

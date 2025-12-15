@@ -16,11 +16,12 @@ class TraceMsg(object):
     }
     """
 
-    def __init__(self, r_id='0'):
+    def __init__(self, r_id='0', step=0):
         self._request_id = None
-        self._instantiate_vars(r_id)
+        self._step = None
+        self._instantiate_vars(r_id, step)
 
-    def _instantiate_vars(self, r_id):
+    def _instantiate_vars(self, r_id, step):
         """ Attributes in the TraceMsg are processed as
         Getter and Setters.
 
@@ -28,6 +29,7 @@ class TraceMsg(object):
             r_id: request ID
         """
         self.request_id = r_id
+        self.step = step
 
     @property
     def request_id(self):
@@ -44,3 +46,19 @@ class TraceMsg(object):
                 self._request_id = int(r_id)
         except ValueError:
             raise ValueError("Invalid ID provided: %s" % r_id)
+
+    @property
+    def step(self):
+        """ Getter: Step number """
+        return self._step
+
+    @step.setter
+    def step(self, step):
+        """ Setter: Step number """
+        try:
+            if isinstance(step, int):
+                self._step = step
+            else:
+                self._step = int(step)
+        except ValueError:
+            raise ValueError(f"Invalid step number provided: f{step}")

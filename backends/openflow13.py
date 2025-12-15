@@ -37,7 +37,6 @@ def packet_in(event, packet_in_msg):
     log.debug("PacketIn is not a Data Trace Probe")
     return 0, 0, 0
 
-
 def send_packet_out(controller, switch, port, data):
     """ Just prepare the PacketOut to be used by the Tracer.
 

@@ -27,6 +27,7 @@ class TraceEntries(object):
         self._nw_proto = 0
         self._tp_src = 0
         self._tp_dst = 0
+        self.timeout = 0.5
         self.init_entries = dict()  # User request
 
     @property
@@ -367,5 +368,8 @@ class TraceEntries(object):
 
             if 'tp_dst' in tp_:
                 self.tp_dst = tp_['tp_dst']
+
+        if 'timeout' in trace:
+            self.timeout = trace["timeout"]
 
         self.init_entries = entries

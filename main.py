@@ -29,8 +29,8 @@ from napps.amlight.sdntrace.shared.switches import Switches
 from napps.amlight.sdntrace.tracing.trace_manager import TraceManager
 
 from kytos.core import KytosNApp, rest
-from kytos.core.helpers import listen_to, load_spec, validate_openapi
-from kytos.core.rest_api import JSONResponse, Request, get_json_or_400
+from kytos.core.helpers import alisten_to, avalidate_openapi_request, load_spec
+from kytos.core.rest_api import JSONResponse, Request, aget_json_or_400
 
 
 class Main(KytosNApp):
@@ -67,8 +67,8 @@ class Main(KytosNApp):
         """
         self.tracing.stop_traces()
 
-    @listen_to("kytos/of_core.v0x04.messages.in.ofpt_packet_in")
-    def handle_packet_in(self, event):
+    @alisten_to("kytos/of_core.v0x04.messages.in.ofpt_packet_in")
+    async def handle_packet_in(self, event):
         """Receives OpenFlow PacketIn msgs and search from trace packets.
         If process_packet_in returns 0,0,0, it means it is not a probe
         packet. Otherwise, store the msg for later use by Tracers.
@@ -78,14 +78,14 @@ class Main(KytosNApp):
         """
         ethernet, in_port, switch = process_packet_in(event)
         if not isinstance(ethernet, int):
-            self.tracing.queue_probe_packet(event, ethernet, in_port, switch)
+            await self.tracing.queue_probe_packet(event, ethernet, in_port, switch)
 
     @rest("/v1/trace", methods=["PUT"])
-    @validate_openapi(spec)
-    def run_trace(self, request: Request) -> JSONResponse:
+    async def run_trace(self, request: Request) -> JSONResponse:
         """Submit a trace request."""
-        body = get_json_or_400(request, self.controller.loop)
-        return JSONResponse(self.tracing.rest_new_trace(body))
+        await avalidate_openapi_request(self.spec, request)
+        body = await aget_json_or_400(request)
+        return JSONResponse(await self.tracing.rest_new_trace(body))
 
     @rest("/v1/trace", methods=["GET"])
     def get_results(self, _request: Request) -> JSONResponse:
@@ -114,6 +114,5 @@ class Main(KytosNApp):
         settings_dict = {}
         settings_dict["color_field"] = settings.COLOR_FIELD
         settings_dict["color_value"] = settings.COLOR_VALUE
-        settings_dict["trace_interval"] = settings.TRACE_INTERVAL
         settings_dict["parallel_traces"] = settings.PARALLEL_TRACES
         return JSONResponse(settings_dict)

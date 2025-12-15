@@ -6,10 +6,20 @@ All notable changes to the sdntrace NApp will be documented in this file.
 [UNRELEASED] - Under development
 ********************************
 
+Fixed
+=====
+- Catching pickle error to avoid crashing for invalid packets.
+
 Changed
 =======
 - Internal refactoring updating UI components to use ``pinia``
+- Busy waiting has been changed to queue based processing.
+- Removed ``requests``, using ``httpx`` to send requests.
+- Removed ``TRACE_INTERVAL`` from settings. The traces will be processed as soon as possible.
 
+Added
+=====
+- Added field to request when making a trace called ``timeout``. If present in the request, modifies the time to wait for a response of the packet out when tracing.
 
 [2025.1.0] - 2025-04-14
 ***********************

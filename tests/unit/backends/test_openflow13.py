@@ -1,6 +1,6 @@
 """ Tests for /backends/openflow13.py """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, AsyncMock
 
 from napps.amlight.sdntrace import settings
 from napps.amlight.sdntrace.backends.openflow13 import (
@@ -58,7 +58,7 @@ class TestOpenflow13:
         # Ethernet(destination='00:15:af:d5:38:98',
         #          source='ee:ee:ee:ee:ee:01', ether_type=0x800,
         #          data=b'testdata')
-        controller = MagicMock()
+        controller = AsyncMock()
         switch = MagicMock()
         switch.connection.value = "00:15:af:d5:38:98"
         port = 1
@@ -79,7 +79,7 @@ class TestOpenflow13:
     @patch("napps.amlight.sdntrace.backends.openflow13.of_msg_prio")
     def test_send_packet_out(self, mock_of_msg_prio) -> None:
         """Test send_packet_out."""
-        controller = MagicMock()
+        controller = AsyncMock()
         send_packet_out(controller, MagicMock(), MagicMock(), MagicMock())
         assert controller.buffers.msg_out.put.call_count == 1
         assert mock_of_msg_prio.call_count == 1
