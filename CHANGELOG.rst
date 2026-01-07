@@ -9,6 +9,7 @@ All notable changes to the sdntrace NApp will be documented in this file.
 Fixed
 =====
 - Catching pickle error to avoid crashing for invalid packets.
+- Fixed dl_src openapi type as str
 
 Changed
 =======

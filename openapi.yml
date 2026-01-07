@@ -192,8 +192,8 @@ components:
           type: integer
           format: int32
         dl_src:
-          type: integer
-          format: int32
+          type: string
+          format: MAC
         dl_dst:
           type: string
           format: MAC
