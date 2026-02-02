@@ -6,6 +6,9 @@ All notable changes to the sdntrace NApp will be documented in this file.
 [UNRELEASED] - Under development
 ********************************
 
+[2025.2.0] - 2026-02-02
+***********************
+
 Fixed
 =====
 - Catching pickle error to avoid crashing for invalid packets.
