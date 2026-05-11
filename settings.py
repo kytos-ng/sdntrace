@@ -15,3 +15,6 @@ PARALLEL_TRACES = 10
 
 # URL for coloring app
 COLORS_URL = "http://localhost:8181/api/amlight/coloring/colors"
+
+# Timeout to wait for packet-in
+TIMEOUT = 3.0

@@ -3,6 +3,7 @@
 """
 import re
 from napps.amlight.sdntrace import constants
+from napps.amlight.sdntrace import settings
 
 DPID_ADDR = re.compile('([0-9A-Fa-f]{2}[-:]){7}[0-9A-Fa-f]{2}$')
 MAC_ADDR = re.compile('([0-9A-Fa-f]{2}[-:]){5}[0-9A-Fa-f]{2}$')
@@ -27,7 +28,8 @@ class TraceEntries(object):
         self._nw_proto = 0
         self._tp_src = 0
         self._tp_dst = 0
-        self.timeout = 0.5
+        self.timeout = settings.TIMEOUT
+        self.step_timeout = 0.5
         self.init_entries = dict()  # User request
 
     @property

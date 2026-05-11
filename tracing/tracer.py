@@ -146,8 +146,12 @@ class TracePath(object):
             send_packet_out(self.trace_mgr.controller,
                             switch, in_port, probe_pkt)
 
-            time.sleep(self.init_entries.timeout)
-            pkt_in_msg = self.get_packet_in()
+            step_tout = 0
+            pkt_in_msg = None
+            while step_tout < self.init_entries.timeout and pkt_in_msg is None:
+                time.sleep(self.init_entries.step_timeout)
+                step_tout += self.init_entries.step_timeout
+                pkt_in_msg = self.get_packet_in()
 
             if pkt_in_msg:
                 result = {"dpid": pkt_in_msg["dpid"],
