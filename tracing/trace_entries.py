@@ -28,7 +28,7 @@ class TraceEntries(object):
         self._nw_proto = 0
         self._tp_src = 0
         self._tp_dst = 0
-        self.timeout = settings.TIMEOUT
+        self.timeout = max(float(settings.TIMEOUT), 0)
         self.step_timeout = 0.5
         self.init_entries = dict()  # User request
 
