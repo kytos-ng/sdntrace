@@ -634,7 +634,7 @@ class TestTracePath:
     def test_send_trace_probe_pre_ended(self, mock_get_switch):
         """Test send_trace_probe when trace ended prematurely."""
         mock_get_switch.return_value = True
-        initial_entries = MagicMock(dpid="00:01")
+        initial_entries = MagicMock(dpid="00:01", step_timeout=0.5)
         tracer = TracePath(self.trace_manager, 3001, initial_entries)
 
         tracer.trace_ended = True

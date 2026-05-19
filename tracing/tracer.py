@@ -138,6 +138,9 @@ class TracePath(object):
             Timeout
             {switch & port}
         """
+        step_timeout = self.init_entries.step_timeout
+        if step_timeout <= 0:
+            step_timeout = 0.5
         timeout_control = 0  # Controls the timeout of 1 second and two tries
         while not self.trace_ended:
             log.info(f'Trace {self.id}: Sending POut to switch:'
@@ -146,8 +149,14 @@ class TracePath(object):
             send_packet_out(self.trace_mgr.controller,
                             switch, in_port, probe_pkt)
 
-            time.sleep(self.init_entries.timeout)
-            pkt_in_msg = self.get_packet_in()
+            remaining_time = self.init_entries.timeout
+            pkt_in_msg = None
+            while True:
+                time.sleep(step_timeout)
+                remaining_time -= step_timeout
+                pkt_in_msg = self.get_packet_in()
+                if remaining_time <= 0 or pkt_in_msg is not None:
+                    break
 
             if pkt_in_msg:
                 result = {"dpid": pkt_in_msg["dpid"],

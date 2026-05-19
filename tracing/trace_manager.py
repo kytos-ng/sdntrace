@@ -151,7 +151,7 @@ class TraceManager(object):
         try:
             trace_entries = TraceEntries()
             trace_entries.load_entries(entries)
-        except ValueError as msg:
+        except (ValueError, TypeError) as msg:
             return str(msg)
 
         init_switch = Switches().get_switch(trace_entries.dpid)
