@@ -6,6 +6,15 @@ All notable changes to the sdntrace NApp will be documented in this file.
 [UNRELEASED] - Under development
 ********************************
 
+[2025.2.1] - 2026-07-20
+***********************
+
+=======
+Changed
+=======
+- Added the trace timeout config into ``settings.py`` (which can still be overwritten from Trace request payload)
+- Introduced ``settings.RESULTS_QUEUE_MAX_SIZE=1000`` to avoid unbounded trace results growth
+
 [2025.2.0] - 2026-02-02
 ***********************
 
