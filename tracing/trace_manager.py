@@ -7,7 +7,7 @@ import dill
 import time
 from janus import Queue
 from _thread import start_new_thread as new_thread
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from typing import Optional
 
 from kytos.core import log
@@ -40,7 +40,7 @@ class TraceManager(object):
         # Trace queues
         self._request_dict = dict()
         self._request_queue = None
-        self._results_queue = dict()
+        self._results_queue = OrderedDict()
         self._running_traces:dict[int, TraceEntries] = dict()
 
         # Counters
@@ -120,6 +120,8 @@ class TraceManager(object):
             result: trace result generated using tracer
         """
         self._results_queue[trace_id] = result
+        while len(self._results_queue) > settings.RESULTS_QUEUE_MAX_SIZE:
+            self._results_queue.popitem(last=False)
         self._running_traces.pop(trace_id, None)
 
     def avoid_duplicated_request(self, entries):

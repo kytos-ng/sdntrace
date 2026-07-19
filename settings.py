@@ -15,3 +15,9 @@ PARALLEL_TRACES = 10
 
 # URL for coloring app
 COLORS_URL = "http://localhost:8181/api/amlight/coloring/colors"
+
+# Timeout to wait for packet-in
+TIMEOUT = 0.5
+
+# Maximum number of finished trace results kept in memory
+RESULTS_QUEUE_MAX_SIZE = 1000
