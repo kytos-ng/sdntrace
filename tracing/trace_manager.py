@@ -55,7 +55,7 @@ class TraceManager(object):
         self._async_loop = None
         # To start traces
         self.run_traces()
-    
+
     def stop_traces(self):
         if self._is_tracing_running:
             self._is_tracing_running = False
