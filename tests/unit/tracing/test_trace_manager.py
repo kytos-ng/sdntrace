@@ -167,10 +167,9 @@ class TestTraceManager:
     def test_add_result_evicts_oldest_when_over_max(self):
         """add_result keeps _results_queue bounded via FIFO eviction."""
         self.trace_manager._results_queue.clear()
-        with patch.object(settings, "RESULTS_QUEUE_MAX_SIZE", 3):
-            for trace_id in range(5):
-                self.trace_manager.add_result(trace_id, {"result": trace_id})
-        # Only the newest 3 results are kept, oldest (0, 1) evicted in order.
+        self.trace_manager._results_queue_max_size = 3
+        for trace_id in range(5):
+            self.trace_manager.add_result(trace_id, {"result": trace_id})
         assert len(self.trace_manager._results_queue) == 3
         assert list(self.trace_manager._results_queue.keys()) == [2, 3, 4]
 

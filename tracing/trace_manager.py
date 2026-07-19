@@ -42,6 +42,7 @@ class TraceManager(object):
         self._request_queue = None
         self._results_queue = OrderedDict()
         self._running_traces:dict[int, TraceEntries] = dict()
+        self._results_queue_max_size = max(int(settings.RESULTS_QUEUE_MAX_SIZE), 1)
 
         # Counters
         self._total_traces_requested = 0
@@ -54,7 +55,7 @@ class TraceManager(object):
         self._async_loop = None
         # To start traces
         self.run_traces()
-
+    
     def stop_traces(self):
         if self._is_tracing_running:
             self._is_tracing_running = False
@@ -120,7 +121,10 @@ class TraceManager(object):
             result: trace result generated using tracer
         """
         self._results_queue[trace_id] = result
-        while len(self._results_queue) > settings.RESULTS_QUEUE_MAX_SIZE:
+        while (
+            self._results_queue
+            and len(self._results_queue) > self._results_queue_max_size
+        ):
             self._results_queue.popitem(last=False)
         self._running_traces.pop(trace_id, None)
 
