@@ -164,6 +164,15 @@ class TestTraceManager:
         trace_id = self.trace_manager.get_id()
         assert trace_id == 30003
 
+    def test_add_result_evicts_oldest_when_over_max(self):
+        """add_result keeps _results_queue bounded via FIFO eviction."""
+        self.trace_manager._results_queue.clear()
+        self.trace_manager._results_queue_max_size = 3
+        for trace_id in range(5):
+            self.trace_manager.add_result(trace_id, {"result": trace_id})
+        assert len(self.trace_manager._results_queue) == 3
+        assert list(self.trace_manager._results_queue.keys()) == [2, 3, 4]
+
     @patch("napps.amlight.sdntrace.shared.colors.Colors.aget_switch_color")
     @patch("napps.amlight.sdntrace.tracing.tracer.TracePath.send_trace_probe")
     async def test_trace_pending(self, mock_send_probe, mock_acolors):
@@ -365,6 +374,7 @@ class TestTraceManagerTheadTest:
 
     def setup_method(self):
         """Set up before each test method"""
+        TestTraceManager.create_basic_switches(get_controller_mock())
         TraceManager.run_traces = MagicMock()
         self.trace_manager = TraceManager(controller=get_controller_mock())
         self.trace_manager.stop_traces()
@@ -399,9 +409,9 @@ class TestTraceManagerTheadTest:
         dpid = {"dpid": "00:00:00:00:00:00:00:01", "in_port": 1}
         switch = {"switch": dpid, "eth": eth}
         entries = {"trace": switch}
-        TraceEntries().load_entries(entries)
-
-        trace_entries = self.trace_manager._request_queue = Queue()
+        trace_entries = TraceEntries()
+        trace_entries.load_entries(entries)
+        self.trace_manager._request_queue = Queue()
         _ = await self.trace_manager.new_trace(trace_entries)
 
         trace_thread = threading.Thread(target=self.trace_manager._run_traces)
